@@ -187,9 +187,10 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
                     if args.skip_lines:
                         print()
     else:
-        for sequence_line in wrap(sequence, strip_ansi=True,
-                                  columns=args.columns):
-            print(sequence_line)
+        print(sequence)
+        #for sequence_line in wrap(sequence, strip_ansi=True,
+        #                          columns=args.columns):
+        #    print(sequence_line)
 
     if plus_line:
         print(plus_line)
