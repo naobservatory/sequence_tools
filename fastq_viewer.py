@@ -164,7 +164,7 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
         if not any_matched:
             return
 
-    print(id_line)
+    print(COLORS['black_bold'] + id_line + COLOR_END)
 
     if quality:
         for sequence_line, quality_line in zip(
