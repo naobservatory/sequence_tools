@@ -177,8 +177,8 @@ def print_fastq(args, at_line, sequence, plus_line, quality):
                 ansiwrap.ansilen(quality_line)))
 
         print(sequence_line)
-        if (not args.hide_quality_when_not_highlighted or
-            has_color(sequence_line)):
+        if args.show_quality or (args.show_quality_when_highlighted and
+                                 has_color(sequence_line)):
             if args.colorize_quality:
                 quality_line = colorize_quality(quality_line,
                                                 max_quality=args.max_quality)
@@ -196,9 +196,7 @@ def start():
     sequence_len = 0
 
     parser = argparse.ArgumentParser(
-        description='Display FASTQ files in a more human-readable way.  Wraps '
-        'lines to terminal width, preserving existing ansi colors, and '
-        'interleaves sequence and quality lines.')
+        description='Display FASTQ files in a more human-readable way.')
     parser.add_argument('fastq_filenames', nargs='*')
     parser.add_argument(
         '--colorize-quality', action='store_true',
@@ -213,12 +211,14 @@ def start():
         help='Leave extra space between lines for readability.')
     parser.add_argument(
         '--highlighted-only', action='store_true',
-        help='Only print sequences that have colored portions in the input. '
-        'For example, the output of fuzzy_highlighter.')
+        help='Only print sequences that have colored portions. For example, '
+        'the output of fuzzy_highlighter.')
     parser.add_argument(
-        '--hide-quality-when-not-highlighted', action='store_true',
-        help='Only print quality lines corresponding to sequence lines that '
-        'have colored portions in the input.')
+        '--show-quality', action='store_true', help='Print quality lines.')
+    parser.add_argument(
+        '--show-quality-when-highlighted', action='store_true',
+        help='Print quality lines corresponding to sequence lines that '
+        'have colored portions.')
     parser.add_argument(
         '--id-matches', metavar='REGEX',
         help='Only print sequences whose id line matches the regex.')

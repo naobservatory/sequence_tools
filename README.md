@@ -21,15 +21,12 @@ Run `fuzzy_highlighter --help` for more details.
 
 ```
 usage: fastq_viewer.py [-h] [--colorize-quality] [--columns N] [--skip-lines]
-                       [--highlighted-only]
-                       [--hide-quality-when-not-highlighted]
-                       [--id-matches REGEX] [--seq-matches REGEX[:COLOR]]
-                       [--max-quality CHAR]
+                       [--highlighted-only] [--show-quality]
+                       [--show-quality-when-highlighted] [--id-matches REGEX]
+                       [--seq-matches REGEX[:COLOR]] [--max-quality CHAR]
                        [fastq_filenames ...]
 
-Display FASTQ files in a more human-readable way. Wraps lines to terminal
-width, preserving existing ansi colors, and interleaves sequence and quality
-lines.
+Display FASTQ files in a more human-readable way.
 
 positional arguments:
   fastq_filenames
@@ -42,11 +39,12 @@ optional arguments:
   --columns N           How many columns to wrap at. If unspecified,
                         autodetects.
   --skip-lines          Leave extra space between lines for readability.
-  --highlighted-only    Only print sequences that have colored portions in the
-                        input. For example, the output of fuzzy_highlighter.
-  --hide-quality-when-not-highlighted
-                        Only print quality lines corresponding to sequence
-                        lines that have colored portions in the input.
+  --highlighted-only    Only print sequences that have colored portions. For
+                        example, the output of fuzzy_highlighter.
+  --show-quality        Print quality lines.
+  --show-quality-when-highlighted
+                        Print quality lines corresponding to sequence lines
+                        that have colored portions.
   --id-matches REGEX    Only print sequences whose id line matches the regex.
   --seq-matches REGEX[:COLOR]
                         Only print sequences which match the regex. May be
