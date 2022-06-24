@@ -20,9 +20,11 @@ Run `fuzzy_highlighter --help` for more details.
 ## fastq_viewer.py
 
 ```
-$ python3 fastq_viewer.py  --help
-usage: fastq_viewer.py [-h] [--colorize-quality] [--columns COLUMNS]
-                       [--skip-lines] [--max-quality MAX_QUALITY]
+usage: fastq_viewer.py [-h] [--colorize-quality] [--columns N] [--skip-lines]
+                       [--highlighted-only]
+                       [--hide-quality-when-not-highlighted]
+                       [--id-matches REGEX] [--seq-matches REGEX[:COLOR]]
+                       [--max-quality CHAR]
                        [fastq_filenames ...]
 
 Display FASTQ files in a more human-readable way. Wraps lines to terminal
@@ -37,12 +39,23 @@ optional arguments:
   --colorize-quality    Color the quality line to show the quality visually.
                         Order, lowest to highest, is black, magenta, red,
                         yellow, white, green, blue, cyan.
-  --columns COLUMNS     How many columns to wrap at. If unspecified we
-                        autodetect.
+  --columns N           How many columns to wrap at. If unspecified,
+                        autodetects.
   --skip-lines          Leave extra space between lines for readability.
-  --max-quality MAX_QUALITY
-                        If your sequencer doesn't use the whole quality range,
+  --highlighted-only    Only print sequences that have colored portions in the
+                        input. For example, the output of fuzzy_highlighter.
+  --hide-quality-when-not-highlighted
+                        Only print quality lines corresponding to sequence
+                        lines that have colored portions in the input.
+  --id-matches REGEX    Only print sequences whose id line matches the regex.
+  --seq-matches REGEX[:COLOR]
+                        Only print sequences which match the regex. May be
+                        specified multiple times, and sequences that match any
+                        will be printed. Colors are red, yellow, green, blue,
+                        magenta, cyan, white, and black, with an optional
+                        _bold suffix.
+  --max-quality CHAR    If your sequencer doesn't use the whole quality range,
                         set this to something smaller than '~' to make better
-                        use of the available colors. Ignored when
-                        --colorize-quality is false.
+                        use of the available colors. Ignored when --colorize-
+                        quality is false.
 ```
