@@ -139,11 +139,11 @@ def wrap(text, strip_ansi, columns):
     else:
         return lines
 
-def print_fastq(args, at_line, sequence, plus_line, quality):
+def print_seq(args, id_line, sequence, plus_line=None, quality=None):
     if args.highlighted_only and not has_color(sequence):
         return
 
-    if args.id_matches and not regex.search(args.id_matches, at_line):
+    if args.id_matches and not regex.search(args.id_matches, id_line):
         return
 
     if args.seq_matches:
@@ -164,37 +164,37 @@ def print_fastq(args, at_line, sequence, plus_line, quality):
         if not any_matched:
             return
 
-    print(at_line)
+    print(id_line)
 
-    for sequence_line, quality_line in zip(
-            wrap(sequence, strip_ansi=True, columns=args.columns),
-            wrap(quality, strip_ansi=False, columns=args.columns)):
-        if ansiwrap.ansilen(sequence_line) != ansiwrap.ansilen(quality_line):
+    if quality:
+        for sequence_line, quality_line in zip(
+                wrap(sequence, strip_ansi=True, columns=args.columns),
+                wrap(quality, strip_ansi=False, columns=args.columns)):
+            if ansiwrap.ansilen(sequence_line) != ansiwrap.ansilen(quality_line):
+                print(sequence_line)
+                print(quality_line)
+                raise Exception('%s vs %s' % (
+                    ansiwrap.ansilen(sequence_line),
+                    ansiwrap.ansilen(quality_line)))
+
             print(sequence_line)
-            print(quality_line)
-            raise Exception('%s vs %s' % (
-                ansiwrap.ansilen(sequence_line),
-                ansiwrap.ansilen(quality_line)))
+            if args.show_quality or (args.show_quality_when_highlighted and
+                                     has_color(sequence_line)):
+                if args.colorize_quality:
+                    quality_line = colorize_quality(quality_line,
+                                                    max_quality=args.max_quality)
+                    print(quality_line)
+                    if args.skip_lines:
+                        print()
+    else:
+        for sequence_line in wrap(sequence, strip_ansi=True,
+                                  columns=args.columns):
+            print(sequence_line)
 
-        print(sequence_line)
-        if args.show_quality or (args.show_quality_when_highlighted and
-                                 has_color(sequence_line)):
-            if args.colorize_quality:
-                quality_line = colorize_quality(quality_line,
-                                                max_quality=args.max_quality)
-            print(quality_line)
-            if args.skip_lines:
-                print()
-    print(plus_line)
+    if plus_line:
+        print(plus_line)
 
 def start():
-    at_line = None
-    plus_line = None
-    sequence = []
-    quality = []
-    quality_len = 0
-    sequence_len = 0
-
     parser = argparse.ArgumentParser(
         description='Display FASTQ files in a more human-readable way.')
     parser.add_argument('fastq_filenames', nargs='*')
@@ -244,40 +244,75 @@ def start():
     if not args.columns:
         args.columns = get_columns()
 
+    run(args)
+
+def run(args):
+    format = None  # '@' for fastq or '>' for fasta
+
+    id_line = None
+    plus_line = None
+    sequence = []
+    quality = []
+    quality_len = 0
+    sequence_len = 0
     for lineno, line in enumerate(fileinput.input(args.fastq_filenames)):
         line = line.strip()
-        if not at_line:
-            if not line.startswith('@'):
-                die('bad value at line %s of %s: %r' % (
-                    lineno, fileinput.filename(), line))
-            at_line = line
-        elif not plus_line:
-            if line.startswith('+'):
-                plus_line = line
+
+        if not format:
+            if line.startswith('>'):
+                format = 'fasta'
+            elif line.startswith('@'):
+                format = 'fastq'
+            else:
+                die('%s:%s: unknown format %r' %
+                    fileinput.filename(), lineno, line)
+
+        if format == 'fastq':
+            if not id_line:
+                if not line.startswith('@'):
+                    die('%s:%s: bad value: %r' % (
+                        fileinput.filename(), lineno, line))
+                id_line = line
+            elif not plus_line:
+                if line.startswith('+'):
+                    plus_line = line
+                else:
+                    sequence.append(line)
+                    sequence_len += colorless_len(line)
+            else:
+                quality.append(line)
+                quality_len += len(line)
+
+                if quality_len == sequence_len:
+                    print_seq(args,
+                              id_line,
+                              ''.join(sequence),
+                              plus_line,
+                              quality=''.join(quality))
+                    id_line = None
+                    plus_line = None
+                    sequence = []
+                    quality = []
+                    quality_len = 0
+                    sequence_len = 0
+
+                elif quality_len > sequence_len:
+                    die('quality longer than sequence at line %s of %s '
+                        '(%s > %s)' % (lineno, fileinput.filename(), quality_len,
+                                       sequence_len))
+        elif format == 'fasta':
+            if line.startswith('>'):
+                if sequence:
+                    print_seq(args, id_line, ''.join(sequence))
+                    id_line = None
+                    sequence = []
+                id_line = line
             else:
                 sequence.append(line)
-                sequence_len += colorless_len(line)
-        else:
-            quality.append(line)
-            quality_len += len(line)
+    if format == 'fasta' and sequence:
+        print_seq(args, id_line, ''.join(sequence))
 
-            if quality_len == sequence_len:
-                print_fastq(args,
-                            at_line,
-                            ''.join(sequence),
-                            plus_line,
-                            quality=''.join(quality))
-                at_line = None
-                sequence = []
-                plus_line = None
-                quality = []
-                quality_len = 0
-                sequence_len = 0
 
-            elif quality_len > sequence_len:
-                die('quality longer than sequence at line %s of %s '
-                    '(%s > %s)' % (lineno, fileinput.filename(), quality_len,
-                                   sequence_len))
 
 if __name__ == '__main__':
     start()
