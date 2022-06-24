@@ -2,8 +2,10 @@ import argparse
 import fileinput
 import sys
 import re
-import ansiwrap # python3 -m pip install ansiwrap
 import os
+
+import ansiwrap # python3 -m pip install ansiwrap
+import regex # python3 -m pip install regex
 
 def die(msg):
     print(msg)
@@ -21,22 +23,46 @@ def ansistrip(line):
     # This is much more agressive than ANSIRE, but it should be the same for
     # our use case.  The key difference is at end of line with an incomplete
     # escape code when ANSIRE won't strip and we will.
-    
+
     # Nucleotides are generally in ACGT but other letters are used
     # occasionally and we don't need to be picky.
     return re.sub('[^A-Z]+', '', line)
 
-COLOR_BUCKETS = [
-    '\x1b[1;30m',  # black, bold so it's not invisible
-    '\x1b[35m',    # magenta
-    '\x1b[31m',    # red
-    '\x1b[33m',    # yellow
-    '\x1b[37m',    # white
-    '\x1b[32m',    # green
-    '\x1b[34m',    # blue
-    '\x1b[36m',    # cyan
-]
+def has_color(line):
+    return re.search('[^A-Z]+', line)
+
+COLORS = {
+    'black': '\x1b[30m',
+    'red': '\x1b[31m',
+    'green': '\x1b[32m',
+    'yellow': '\x1b[33m',
+    'blue': '\x1b[34m',
+    'magenta': '\x1b[35m',
+    'cyan': '\x1b[36m',
+    'white': '\x1b[37m',
+
+    'black_bold': '\x1b[1;30m',
+    'red_bold': '\x1b[1;31m',
+    'green_bold': '\x1b[1;32m',
+    'yellow_bold': '\x1b[1;33m',
+    'blue_bold': '\x1b[1;34m',
+    'magenta_bold': '\x1b[1;35m',
+    'cyan_bold': '\x1b[1;36m',
+    'white_bold': '\x1b[1;37m',
+}
 COLOR_END = '\x1b[0m'
+
+
+COLOR_BUCKETS = [
+    COLORS['black_bold'],  # bold so it's not invisible
+    COLORS['magenta'],
+    COLORS['red'],
+    COLORS['yellow'],
+    COLORS['white'],
+    COLORS['green'],
+    COLORS['blue'],
+    COLORS['cyan'],
+]
 
 def colorize_quality(line, max_quality):
     # Quality is ascii 33 (!) through 126 (~) in order, very tidy.
@@ -50,7 +76,7 @@ def colorize_quality(line, max_quality):
         bucket = min(len(COLOR_BUCKETS)-1, bucket)
         out.append('%s%s%s' % (
             COLOR_BUCKETS[bucket], c, COLOR_END))
-        
+
     return ''.join(out)
 
 # copied from icdiff
@@ -114,8 +140,32 @@ def wrap(text, strip_ansi, columns):
         return lines
 
 def print_fastq(args, at_line, sequence, plus_line, quality):
+    if args.highlighted_only and not has_color(sequence):
+        return
+
+    if args.id_matches and not regex.search(args.id_matches, at_line):
+        return
+
+    if args.seq_matches:
+        any_matched = False
+        for seq_matcher in args.seq_matches:
+            color = None
+            if ':' in seq_matcher:
+                seq_matcher, color = seq_matcher.split(':')
+                if color not in COLORS:
+                    die('Unknown color %r' % color)
+            s = regex.search(seq_matcher, sequence)
+            if s:
+                any_matched = True
+                start, end = s.span()
+                sequence = (
+                    sequence[:start] + COLORS[color] +
+                    sequence[start:end] + COLOR_END + sequence[end:])
+        if not any_matched:
+            return
+
     print(at_line)
-    
+
     for sequence_line, quality_line in zip(
             wrap(sequence, strip_ansi=True, columns=args.columns),
             wrap(quality, strip_ansi=False, columns=args.columns)):
@@ -127,14 +177,16 @@ def print_fastq(args, at_line, sequence, plus_line, quality):
                 ansiwrap.ansilen(quality_line)))
 
         print(sequence_line)
-        if args.colorize_quality:
-            quality_line = colorize_quality(quality_line,
-                                            max_quality=args.max_quality)
-        print(quality_line)
-        if args.skip_lines:
-            print()
+        if (not args.hide_quality_when_not_highlighted or
+            has_color(sequence_line)):
+            if args.colorize_quality:
+                quality_line = colorize_quality(quality_line,
+                                                max_quality=args.max_quality)
+            print(quality_line)
+            if args.skip_lines:
+                print()
     print(plus_line)
-        
+
 def start():
     at_line = None
     plus_line = None
@@ -154,14 +206,30 @@ def start():
         'lowest to highest, is black, magenta, red, yellow, white, green, '
         'blue, cyan.')
     parser.add_argument(
-        '--columns', type=int, help='How many columns to wrap at.  If '
-        'unspecified we autodetect.')
+        '--columns', type=int, metavar='N',
+        help='How many columns to wrap at.  If unspecified, autodetects.')
     parser.add_argument(
         '--skip-lines', action='store_true',
         help='Leave extra space between lines for readability.')
     parser.add_argument(
-        '--max-quality',
-        default='D',
+        '--highlighted-only', action='store_true',
+        help='Only print sequences that have colored portions in the input. '
+        'For example, the output of fuzzy_highlighter.')
+    parser.add_argument(
+        '--hide-quality-when-not-highlighted', action='store_true',
+        help='Only print quality lines corresponding to sequence lines that '
+        'have colored portions in the input.')
+    parser.add_argument(
+        '--id-matches', metavar='REGEX',
+        help='Only print sequences whose id line matches the regex.')
+    parser.add_argument(
+        '--seq-matches', metavar='REGEX[:COLOR]', action='append',
+        help='Only print sequences which match the regex.  May be specified '
+        'multiple times, and sequences that match any will be printed. '
+        'Colors are red, yellow, green, blue, magenta, cyan, white, and '
+        'black, with an optional _bold suffix.')
+    parser.add_argument(
+        '--max-quality', metavar='CHAR', default='D',
         help="If your sequencer doesn't use the whole quality range, set this "
         "to something smaller than '~' to make better use of the available "
         "colors.  Ignored when --colorize-quality is false.")
