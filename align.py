@@ -3,38 +3,10 @@ import argparse
 
 from Bio import Align
 
-"""
-aligner = Align.PairwiseAligner()
-alignment = aligner.align(a, b)[0]
-
-c = str(alignment).split('\n')[0]
-d = str(alignment).split('\n')[2]
-
-c = c.replace('-', ' ')
-d = d.replace('-', ' ')
-
-COLOR_RED = '\x1b[1;31m'
-COLOR_END = '\x1b[0m'
-
-for e, f in zip(wrap(c), wrap(d)):
-    g = ''
-    h = ''
-    for w, x in zip(e.ljust(35), f.ljust(35)):
-        if w == x:
-            g += x
-            h += x
-        else:
-            g += COLOR_RED + x + COLOR_END
-            h += COLOR_RED + w + COLOR_END
-    
-    print ("%s   %s" % (g, h))
-"""
-
 COLOR_RED = '\x1b[1;31m'
 COLOR_GREEN = '\x1b[1;32m'
 COLOR_YELLOW = '\x1b[1;33m'
 COLOR_END = '\x1b[0m'
-
 
 def wrap(s, columns):
     """Dead-simple wrapper."""
