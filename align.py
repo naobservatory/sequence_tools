@@ -1,6 +1,7 @@
 import os
 import argparse
 import itertools
+import sys
 
 from Bio import Align
 from Bio import SeqIO
@@ -11,6 +12,10 @@ COLOR_RED = '\x1b[1;31m'
 COLOR_GREEN = '\x1b[1;32m'
 COLOR_YELLOW = '\x1b[1;33m'
 COLOR_END = '\x1b[0m'
+
+def die(msg):
+    print(msg)
+    sys.exit(1)
 
 def wrap(s, columns):
     """Dead-simple wrapper."""
@@ -113,23 +118,39 @@ def color_mismatches(seq1_line, seq2_line):
 
     return ''.join(out1), ''.join(out2)
 
-def interpret_sequence_argument(seq):
+def interpret_sequence_argument(arg_in):
+    if ':' in arg_in:
+        seq, seq_id = arg_in.split(':')
+    else:
+        seq = arg_in
+        seq_id = None
+
     if os.path.exists(seq):
         # sequences on disk
         with open(seq) as inf:
             if seq.endswith('.fastq'):
-                return list(SeqIO.parse(inf, "fastq"))
+                records = SeqIO.parse(inf, 'fastq')
             elif seq.endswith('.fasta') or seq.endswith('.fa'):
-                return list(SeqIO.parse(inf, "fasta"))
+                records = SeqIO.parse(inf, 'fasta')
             else:
-                die("unknown file format for %r" % seq)
+                die('unknown file format for %r' % seq)
+
+            if seq_id:
+                for record in records:
+                    if record.id == seq_id:
+                        return [record]
+                else:
+                    die('Sequence %r not found in %r' % (
+                        seq_id, seq))
+            else:
+                return list(records)
     else:
         # raw on the command line
         return [SeqRecord(Seq(seq), description='')]
 
 def run(args):
-    recs1 = interpret_sequence_argument(args.seq1)
-    recs2 = interpret_sequence_argument(args.seq2)
+    recs1 = interpret_sequence_argument(args.in1)
+    recs2 = interpret_sequence_argument(args.in2)
 
     for rec1, rec2 in itertools.product(recs1, recs2):
         align_and_print(rec1, rec2, args)
@@ -141,10 +162,15 @@ def align_and_print(rec1, rec2, args):
     aligner.mismatch_score = -1
     aligner.gap_score = -1
 
-    alignment = aligner.align(seq1, seq2)[0]
+    try:
+        alignment = aligner.align(seq1, seq2)[0]
+    except Exception:
+        print(rec1.description)
+        print(rec2.description)
+        raise
 
     if alignment.score / min(len(seq1), len(seq2)) < (args.min_score/100):
-        # print("no match: score=%s [%s, %s]" % (
+        # print('no match: score=%s [%s, %s]' % (
         #     alignment.score, len(seq1), len(seq2)))
         return
 
@@ -154,9 +180,9 @@ def align_and_print(rec1, rec2, args):
         seq1_aligned, seq2_aligned, args.max_dist)
 
     if rec1.description:
-        print(">%s" % rec1.description)
+        print('>%s' % rec1.description)
     if rec2.description:
-        print(">%s" % rec2.description)
+        print('>%s' % rec2.description)
 
     for seq1_line, seq2_line in zip(
             wrap(seq1_aligned, args.columns),
@@ -169,8 +195,13 @@ def align_and_print(rec1, rec2, args):
 def start():
     parser = argparse.ArgumentParser(
         description='Align sequences and show them vertically interleaved')
-    parser.add_argument('seq1')
-    parser.add_argument('seq2')
+    parser.add_argument(
+        'in1',
+        metavar='ACTG|path[:id]',
+        help='First input.  Either a literal sequence or a path to a fasta '
+        'or fastq file.  If a path, optionally include a colon-separated '
+        'id to refer to identify a specific record in the file.')
+    parser.add_argument('in2', help='See in1')
     parser.add_argument(
         '--columns', type=int, metavar='N',
         help='How many columns to wrap at.  If unspecified, autodetects.')
