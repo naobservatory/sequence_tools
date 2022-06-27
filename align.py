@@ -83,7 +83,7 @@ def get_columns():
             return cr[1]
     return 80
 
-def collapse_subs(seq1, seq2):
+def collapse_subs(seq1, seq2, max_dist):
     out1 = []
     out2 = []
 
@@ -93,12 +93,15 @@ def collapse_subs(seq1, seq2):
                 len(seq1), len(seq2)))
 
     for c1, c2 in zip(seq1, seq2):
-        if c1 == '-' and out2 and out2[-1] == '-':
-            out2.pop()
-            out2.append(c2)
-        elif c2 == '-' and out1 and out1[-1] == '-':
-            out1.pop()
-            out1.append(c1)
+        for i in range(1, min(max_dist, len(out1), len(out2))):
+            if c1 == '-' and out2 and out2[-i] == '-':
+                out2.pop(-i)
+                out2.append(c2)
+                break
+            elif c2 == '-' and out1 and out1[-i] == '-':
+                out1.pop(-i)
+                out1.append(c1)
+                break
         else:
             out1.append(c1)
             out2.append(c2)
@@ -139,13 +142,8 @@ def run(args):
     alignment = aligner.align(args.seq1, args.seq2)[0]
     seq1_aligned, _, seq2_aligned, _ = str(alignment).split('\n')
 
-    # TODO: try less hard: if we have:
-    #    TAGTCCTTTCGTTGTTGACTCGACGGTAGTGACAA
-    #    TAGTCCCAAACCCAACAACCTAGATAGGCTGACAA
-    # it woud be better to mark the intermediate region as deltas than emit:
-    #    TAGTCCTTTCGTTGTTGA--CTCGA-C------GGTAG--TGACAA
-    #    TAGTCC---C-------AAAC-CCAACAACCTAGATAGGCTGACAA
-    seq1_aligned, seq2_aligned = collapse_subs(seq1_aligned, seq2_aligned)
+    seq1_aligned, seq2_aligned = collapse_subs(
+        seq1_aligned, seq2_aligned, args.max_dist)
     
     for seq1_line, seq2_line in zip(
             wrap(seq1_aligned, args.columns),
@@ -163,6 +161,10 @@ def start():
     parser.add_argument(
         '--columns', type=int, metavar='N',
         help='How many columns to wrap at.  If unspecified, autodetects.')
+    parser.add_argument(
+        '--max-dist', type=int, metavar='N', default=10,
+        help='How hard to try to avoid over-alignment when blocks have been '
+        'substituted out.')
     args = parser.parse_args()
     
     if not args.columns:
