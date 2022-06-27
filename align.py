@@ -1,7 +1,11 @@
 import os
 import argparse
+import itertools
 
 from Bio import Align
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.SeqIO import SeqRecord
 
 COLOR_RED = '\x1b[1;31m'
 COLOR_GREEN = '\x1b[1;32m'
@@ -100,23 +104,60 @@ def color_mismatches(seq1_line, seq2_line):
         out1.append(c1)
         if c1_color:
             out1.append(COLOR_END)
-            
+
         if c2_color:
             out2.append(c2_color)
         out2.append(c2)
         if c2_color:
             out2.append(COLOR_END)
-            
+
     return ''.join(out1), ''.join(out2)
 
+def interpret_sequence_argument(seq):
+    if os.path.exists(seq):
+        # sequences on disk
+        with open(seq) as inf:
+            if seq.endswith('.fastq'):
+                return list(SeqIO.parse(inf, "fastq"))
+            elif seq.endswith('.fasta') or seq.endswith('.fa'):
+                return list(SeqIO.parse(inf, "fasta"))
+            else:
+                die("unknown file format for %r" % seq)
+    else:
+        # raw on the command line
+        return [SeqRecord(Seq(seq), description='')]
+
 def run(args):
+    recs1 = interpret_sequence_argument(args.seq1)
+    recs2 = interpret_sequence_argument(args.seq2)
+
+    for rec1, rec2 in itertools.product(recs1, recs2):
+        align_and_print(rec1, rec2, args)
+
+def align_and_print(rec1, rec2, args):
+    seq1, seq2 = rec1.seq, rec2.seq
+
     aligner = Align.PairwiseAligner()
-    alignment = aligner.align(args.seq1, args.seq2)[0]
+    aligner.mismatch_score = -1
+    aligner.gap_score = -1
+
+    alignment = aligner.align(seq1, seq2)[0]
+
+    if alignment.score / min(len(seq1), len(seq2)) < (args.min_score/100):
+        # print("no match: score=%s [%s, %s]" % (
+        #     alignment.score, len(seq1), len(seq2)))
+        return
+
     seq1_aligned, _, seq2_aligned, _ = str(alignment).split('\n')
 
     seq1_aligned, seq2_aligned = collapse_subs(
         seq1_aligned, seq2_aligned, args.max_dist)
-    
+
+    if rec1.description:
+        print(">%s" % rec1.description)
+    if rec2.description:
+        print(">%s" % rec2.description)
+
     for seq1_line, seq2_line in zip(
             wrap(seq1_aligned, args.columns),
             wrap(seq2_aligned, args.columns)):
@@ -124,7 +165,7 @@ def run(args):
         print(seq1_line)
         print(seq2_line)
         print()
-    
+
 def start():
     parser = argparse.ArgumentParser(
         description='Align sequences and show them vertically interleaved')
@@ -137,12 +178,16 @@ def start():
         '--max-dist', type=int, metavar='N', default=10,
         help='How hard to try to avoid over-alignment when blocks have been '
         'substituted out.')
+    parser.add_argument(
+        '--min-score', type=int, metavar='N', default=40,
+        help='Minimum score of alignment to print, counting matches as +1, '
+        'mismatches as -1, and gaps as -1.')
     args = parser.parse_args()
-    
+
     if not args.columns:
         args.columns = get_columns()
 
     run(args)
-    
+
 if __name__ == '__main__':
     start()
