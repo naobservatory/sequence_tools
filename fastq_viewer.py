@@ -139,6 +139,12 @@ def wrap(text, strip_ansi, columns):
     else:
         return lines
 
+def rc(s):
+    return "".join({'T':'A',
+                    'G':'C',
+                    'A':'T',
+                    'C':'G'}[x] for x in reversed(s))
+
 def print_seq(args, id_line, sequence, plus_line=None, quality=None):
     if args.highlighted_only and not has_color(sequence):
         return
@@ -152,6 +158,8 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
             color = None
             if seq_matcher.count(':') == 2:
                 literal_seq, max_errors, color = seq_matcher.split(':')
+                if literal_seq.startswith("rc"):
+                    literal_seq = rc(literal_seq.removeprefix("rc"))
                 if not max_errors.isdigit():
                     die('Bad max_errors %r in %r' % (
                         max_errors, seq_matcher))
@@ -238,7 +246,8 @@ def start():
         '--id-matches', metavar='REGEX',
         help='Only print sequences whose id line matches the regex.')
     parser.add_argument(
-        '--seq-matches', metavar='(REGEX|ACTG:EDITS)[:COLOR]', action='append',
+        '--seq-matches', metavar='(REGEX|[rc]ACTG:EDITS)[:COLOR]',
+        action='append',
         help='Only print sequences which match the regex or sequence.  May be '
         'specified multiple times, and sequences that match any will be '
         'printed. Colors are red, yellow, green, blue, magenta, cyan, white, '
