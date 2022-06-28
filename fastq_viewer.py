@@ -150,10 +150,17 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
         any_matched = False
         for seq_matcher in args.seq_matches:
             color = None
-            if ':' in seq_matcher:
+            if seq_matcher.count(':') == 2:
+                literal_seq, max_errors, color = seq_matcher.split(':')
+                seq_matcher = '(%s){e<=%s}' % (literal_seq, max_errors)
+            elif seq_matcher.count(':') == 1:
                 seq_matcher, color = seq_matcher.split(':')
-                if color not in COLORS:
-                    die('Unknown color %r' % color)
+            elif ':' in seq_matcher:
+                die('Too many colons in %r' % seq_matcher)
+
+            if color and color not in COLORS:
+                die('Unknown color %r' % color)
+
             s = regex.search(seq_matcher, sequence)
             if s:
                 any_matched = True
@@ -225,11 +232,11 @@ def start():
         '--id-matches', metavar='REGEX',
         help='Only print sequences whose id line matches the regex.')
     parser.add_argument(
-        '--seq-matches', metavar='REGEX[:COLOR]', action='append',
-        help='Only print sequences which match the regex.  May be specified '
-        'multiple times, and sequences that match any will be printed. '
-        'Colors are red, yellow, green, blue, magenta, cyan, white, and '
-        'black, with an optional _bold suffix.')
+        '--seq-matches', metavar='(REGEX|ACTG:EDITS)[:COLOR]', action='append',
+        help='Only print sequences which match the regex or sequence.  May be '
+        'specified multiple times, and sequences that match any will be '
+        'printed. Colors are red, yellow, green, blue, magenta, cyan, white, '
+        'and black, with an optional _bold suffix.')
     parser.add_argument(
         '--max-quality', metavar='CHAR', default='D',
         help="If your sequencer doesn't use the whole quality range, set this "
