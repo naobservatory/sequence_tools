@@ -198,7 +198,7 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
 def start():
     parser = argparse.ArgumentParser(
         description='Display FASTQ files in a more human-readable way.')
-    parser.add_argument('fastq_filenames', nargs='*')
+    parser.add_argument('fastq_filenames', nargs='*', metavar='fname[:id]')
     parser.add_argument(
         '--colorize-quality', action='store_true',
         help='Color the quality line to show the quality visually.  Order, '
@@ -248,6 +248,14 @@ def start():
     run(args)
 
 def run(args):
+    for fname in args.fastq_filenames:
+        seq_id = None
+        if ':' in fname:
+            fname, seq_id = fname.split(':')
+        with open(fname) as inf:
+            view_file(args, inf, seq_id)
+
+def view_file(args, inf, seq_id):
     format = None  # '@' for fastq or '>' for fasta
 
     id_line = None
@@ -256,7 +264,8 @@ def run(args):
     quality = []
     quality_len = 0
     sequence_len = 0
-    for lineno, line in enumerate(fileinput.input(args.fastq_filenames)):
+
+    for lineno, line in enumerate(inf):
         line = line.strip()
 
         if not format:
@@ -285,11 +294,15 @@ def run(args):
                 quality_len += len(line)
 
                 if quality_len == sequence_len:
-                    print_seq(args,
-                              id_line,
-                              ''.join(sequence),
-                              plus_line,
-                              quality=''.join(quality))
+                    if (not seq_id or
+                        id_line[1:] == seq_id  or
+                        id_line[1:].startswith(seq_id + " ")):
+
+                        print_seq(args,
+                                  id_line,
+                                  ''.join(sequence),
+                                  plus_line,
+                                  quality=''.join(quality))
                     id_line = None
                     plus_line = None
                     sequence = []
