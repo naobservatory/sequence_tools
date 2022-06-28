@@ -158,9 +158,10 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
             if s:
                 any_matched = True
                 start, end = s.span()
-                sequence = (
-                    sequence[:start] + COLORS[color] +
-                    sequence[start:end] + COLOR_END + sequence[end:])
+                if color:
+                    sequence = (
+                        sequence[:start] + COLORS[color] +
+                        sequence[start:end] + COLOR_END + sequence[end:])
         if not any_matched:
             return
 
@@ -183,9 +184,9 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
                 if args.colorize_quality:
                     quality_line = colorize_quality(quality_line,
                                                     max_quality=args.max_quality)
-                    print(quality_line)
-                    if args.skip_lines:
-                        print()
+                print(quality_line)
+                if args.skip_lines:
+                    print()
     else:
         print(sequence)
         #for sequence_line in wrap(sequence, strip_ansi=True,
