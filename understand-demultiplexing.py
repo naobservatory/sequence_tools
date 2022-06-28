@@ -6,6 +6,10 @@ import regex
 import glob
 import itertools
 import json
+import sys
+
+# find pass fail | grep fastq$ | xargs -n 10 -P 8 python3 \
+#     understand-demultiplexing.py > demultiplexed-by-error-allowance.jsons
 
 Barcode = namedtuple('Barcode', ['barcode_id', 'guppy_barcode_id', 'fwd', 'rev'])
 
@@ -47,11 +51,10 @@ def demultiplex(record, barcodes, max_errors):
     return matches[0] if len(matches) == 1 else "unclassified"
 
 MAX_ERRORS=8
-def start():
+def start(fnames):
     barcodes = parse_barcodes()
 
-    for fname in itertools.chain(glob.glob("pass/**/*.fastq"),
-                                 glob.glob("fail/**/*.fastq")):
+    for fname in fnames:
         results = [(defaultdict(int), defaultdict(int))
                    for i in range(MAX_ERRORS)]
         
@@ -70,4 +73,4 @@ def start():
         print(json.dumps([fname, results]))
 
 if __name__ == "__main__":
-    start()
+    start(sys.argv[1:])
