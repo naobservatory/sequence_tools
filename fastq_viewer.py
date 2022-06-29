@@ -1,15 +1,19 @@
+#!/usr/bin/env python3
+
 import argparse
 import fileinput
 import sys
 import re
 import os
 
-import ansiwrap # python3 -m pip install ansiwrap
-import regex # python3 -m pip install regex
+from Bio import Align
+from Bio.Seq import Seq
 
-def die(msg):
-    print(msg)
-    sys.exit(1)
+import ansiwrap # python3 -m pip install ansiwrap
+
+from util import COLORS, COLOR_END
+from util import die, guess_format_or_die, get_columns
+from util import interpret_sequence_argument
 
 def colorless_len(line):
     l1 = ansiwrap.ansilen(line)
@@ -30,28 +34,6 @@ def ansistrip(line):
 
 def has_color(line):
     return re.search('[^A-Z]+', line)
-
-COLORS = {
-    'black': '\x1b[30m',
-    'red': '\x1b[31m',
-    'green': '\x1b[32m',
-    'yellow': '\x1b[33m',
-    'blue': '\x1b[34m',
-    'magenta': '\x1b[35m',
-    'cyan': '\x1b[36m',
-    'white': '\x1b[37m',
-
-    'black_bold': '\x1b[1;30m',
-    'red_bold': '\x1b[1;31m',
-    'green_bold': '\x1b[1;32m',
-    'yellow_bold': '\x1b[1;33m',
-    'blue_bold': '\x1b[1;34m',
-    'magenta_bold': '\x1b[1;35m',
-    'cyan_bold': '\x1b[1;36m',
-    'white_bold': '\x1b[1;37m',
-}
-COLOR_END = '\x1b[0m'
-
 
 COLOR_BUCKETS = [
     COLORS['black_bold'],  # bold so it's not invisible
@@ -78,42 +60,6 @@ def colorize_quality(line, max_quality):
             COLOR_BUCKETS[bucket], c, COLOR_END))
 
     return ''.join(out)
-
-# copied from icdiff
-def get_columns():
-    if os.name == "nt":
-        try:
-            import struct
-            from ctypes import windll, create_string_buffer
-
-            fh = windll.kernel32.GetStdHandle(-12)  # stderr is -12
-            csbi = create_string_buffer(22)
-            windll.kernel32.GetConsoleScreenBufferInfo(fh, csbi)
-            res = struct.unpack("hhhhHhhhhhh", csbi.raw)
-            return res[7] - res[5] + 1  # right - left + 1
-
-        except Exception:
-            pass
-
-    else:
-
-        def ioctl_GWINSZ(fd):
-            try:
-                import fcntl
-                import termios
-                import struct
-
-                cr = struct.unpack(
-                    "hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234")
-                )
-            except Exception:
-                return None
-            return cr
-
-        cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
-        if cr and cr[1] > 0:
-            return cr[1]
-    return 80
 
 def wrap(text, strip_ansi, columns):
     # You would think we could just use ansiwrap.wrap, but that doesn't
@@ -145,29 +91,30 @@ def rc(s):
                     'A':'T',
                     'C':'G'}[x] for x in reversed(s))
 
-def print_seq(args, id_line, sequence, plus_line=None, quality=None):
-    if args.highlighted_only and not has_color(sequence):
+def print_record(record, args):
+    if args.id_matches and not re.search(args.id_matches, record.description):
         return
 
-    if args.id_matches and not regex.search(args.id_matches, id_line):
-        return
+    seq = str(record.seq)
 
     if args.seq_matches:
+        aligner = Align.PairwiseAligner()
+        # These are the scoring settings porechop uses by default.
+        # https://github.com/rrwick/Porechop/blob/master/porechop/porechop.py#L145
+        aligner.end_gap_score = 0
+        aligner.match_score = 3
+        aligner.mismatch_score = -6
+        aligner.internal_open_gap_score = -5
+        aligner.internal_extend_gap_score = -2
+
         any_matched = False
         for seq_matcher in args.seq_matches:
-            color = None
-            if seq_matcher.count(':') == 2:
-                literal_seq, max_errors, color = seq_matcher.split(':')
-                if literal_seq.startswith("rc"):
-                    literal_seq = rc(literal_seq.removeprefix("rc"))
-                if not max_errors.isdigit():
-                    die('Bad max_errors %r in %r' % (
-                        max_errors, seq_matcher))
-                seq_matcher = '(%s){e<=%s}' % (literal_seq, max_errors)
-            elif seq_matcher.count(':') == 1:
+            color = 'red'
+            if ':' in seq_matcher:
                 seq_matcher, color = seq_matcher.split(':')
-            elif ':' in seq_matcher:
-                die('Too many colons in %r' % seq_matcher)
+
+            if seq_matcher.startswith('rc'):
+                seq_matcher = rc(seq_matcher[2:])
 
             if color:
                 if color not in COLORS:
@@ -175,22 +122,36 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
                 else:
                     color = color + "_bold"
 
-            s = regex.search(seq_matcher, sequence)
-            if s:
-                any_matched = True
-                start, end = s.span()
-                if color:
-                    sequence = (
-                        sequence[:start] + COLORS[color] +
-                        sequence[start:end] + COLOR_END + sequence[end:])
+            if aligner.score(seq, seq_matcher) / min(
+                    len(seq), len(seq_matcher)) < (args.min_score/100):
+                continue
+
+            alignment_seq, _ = aligner.align(seq, seq_matcher)[0].aligned
+            new_seq = []
+            pos = 0
+            for start, end in alignment_seq:
+                new_seq.append(seq[pos:start])
+                new_seq.append(COLORS[color])
+                new_seq.append(seq[start:end])
+                new_seq.append(COLOR_END)
+                pos = end
+            new_seq.append(seq[pos:])
+            seq = ''.join(new_seq)
+            any_matched = True
+
         if not any_matched:
             return
 
-    print(COLORS['black_bold'] + id_line + COLOR_END)
+    if args.highlighted_only and not has_color(seq):
+        return
 
-    if quality:
+    print(COLORS['black_bold'] + record.description + COLOR_END)
+
+    if 'phred_quality' in record.letter_annotations:
+        quality =''.join(chr(ord('!') + x)
+                         for x in record.letter_annotations['phred_quality'])
         for sequence_line, quality_line in zip(
-                wrap(sequence, strip_ansi=True, columns=args.columns),
+                wrap(seq, strip_ansi=True, columns=args.columns),
                 wrap(quality, strip_ansi=False, columns=args.columns)):
             if ansiwrap.ansilen(sequence_line) != ansiwrap.ansilen(quality_line):
                 print(sequence_line)
@@ -209,13 +170,7 @@ def print_seq(args, id_line, sequence, plus_line=None, quality=None):
                 if args.skip_lines:
                     print()
     else:
-        print(sequence)
-        #for sequence_line in wrap(sequence, strip_ansi=True,
-        #                          columns=args.columns):
-        #    print(sequence_line)
-
-    if plus_line:
-        print(plus_line)
+        print(seq)
 
 def start():
     parser = argparse.ArgumentParser(
@@ -246,17 +201,21 @@ def start():
         '--id-matches', metavar='REGEX',
         help='Only print sequences whose id line matches the regex.')
     parser.add_argument(
-        '--seq-matches', metavar='(REGEX|[rc]ACTG:EDITS)[:COLOR]',
+        '--seq-matches', metavar='[rc]ACTG[:COLOR]',
         action='append',
-        help='Only print sequences which match the regex or sequence.  May be '
-        'specified multiple times, and sequences that match any will be '
-        'printed. Colors are red, yellow, green, blue, magenta, cyan, white, '
-        'and black.')
+        help='Only print matching sequence, or reverse complement if "rc" '
+        'prefix is present. May bespecified multiple times, and sequences '
+        'that match any will be printed. Colors are red, yellow, green, blue, '
+        'magenta, cyan, white, and black.')
     parser.add_argument(
         '--max-quality', metavar='CHAR', default='D',
         help="If your sequencer doesn't use the whole quality range, set this "
         "to something smaller than '~' to make better use of the available "
         "colors.  Ignored when --colorize-quality is false.")
+    parser.add_argument(
+        '--min-score', type=int, metavar='N', default=40,
+        help='Minimum score of alignment to print.')
+
     args = parser.parse_args()
 
     if (len(args.max_quality) != 1 or
@@ -272,84 +231,8 @@ def start():
 
 def run(args):
     for fname in args.fastq_filenames:
-        seq_id = None
-        if ':' in fname:
-            fname, seq_id = fname.split(':')
-        with open(fname) as inf:
-            view_file(args, inf, seq_id)
-
-def view_file(args, inf, seq_id):
-    format = None  # '@' for fastq or '>' for fasta
-
-    id_line = None
-    plus_line = None
-    sequence = []
-    quality = []
-    quality_len = 0
-    sequence_len = 0
-
-    for lineno, line in enumerate(inf):
-        line = line.strip()
-
-        if not format:
-            if line.startswith('>'):
-                format = 'fasta'
-            elif line.startswith('@'):
-                format = 'fastq'
-            else:
-                die('%s:%s: unknown format %r' %
-                    fileinput.filename(), lineno, line)
-
-        if format == 'fastq':
-            if not id_line:
-                if not line.startswith('@'):
-                    die('%s:%s: bad value: %r' % (
-                        fileinput.filename(), lineno, line))
-                id_line = line
-            elif not plus_line:
-                if line.startswith('+'):
-                    plus_line = line
-                else:
-                    sequence.append(line)
-                    sequence_len += colorless_len(line)
-            else:
-                quality.append(line)
-                quality_len += len(line)
-
-                if quality_len == sequence_len:
-                    if (not seq_id or
-                        id_line[1:] == seq_id  or
-                        id_line[1:].startswith(seq_id + " ")):
-
-                        print_seq(args,
-                                  id_line,
-                                  ''.join(sequence),
-                                  plus_line,
-                                  quality=''.join(quality))
-                    id_line = None
-                    plus_line = None
-                    sequence = []
-                    quality = []
-                    quality_len = 0
-                    sequence_len = 0
-
-                elif quality_len > sequence_len:
-                    die('quality longer than sequence at line %s of %s '
-                        '(%s > %s)' % (lineno, fileinput.filename(), quality_len,
-                                       sequence_len))
-        elif format == 'fasta':
-            if line.startswith('>'):
-                if sequence:
-                    print_seq(args, id_line, ''.join(sequence))
-                    id_line = None
-                    sequence = []
-                id_line = line
-            else:
-                sequence.append(line)
-    if format == 'fasta' and sequence:
-        print_seq(args, id_line, ''.join(sequence))
-
-
+        for record in interpret_sequence_argument(fname):
+            print_record(record, args)
 
 if __name__ == '__main__':
     start()
