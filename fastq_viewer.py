@@ -207,6 +207,7 @@ def start():
         'prefix is present. May bespecified multiple times, and sequences '
         'that match any will be printed. Colors are red, yellow, green, blue, '
         'magenta, cyan, white, and black.')
+    # TODO: add options for setting specific penalties
     parser.add_argument(
         '--max-quality', metavar='CHAR', default='D',
         help="If your sequencer doesn't use the whole quality range, set this "
