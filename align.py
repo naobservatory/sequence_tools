@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import argparse
 import itertools
@@ -159,8 +161,13 @@ def align_and_print(rec1, rec2, args):
     seq1, seq2 = rec1.seq, rec2.seq
 
     aligner = Align.PairwiseAligner()
-    aligner.mismatch_score = -1
-    aligner.gap_score = -1
+    # These are the scoring settings porechop uses by default.
+    # https://github.com/rrwick/Porechop/blob/master/porechop/porechop.py#L145
+    aligner.end_gap_score = 0
+    aligner.match_score = 3
+    aligner.mismatch_score = -6
+    aligner.internal_open_gap_score = -5
+    aligner.internal_extend_gap_score = -2
 
     try:
         alignment = aligner.align(seq1, seq2)[0]
