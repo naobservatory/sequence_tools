@@ -4,7 +4,7 @@
 
 ```
 usage: align.py [-h] [--columns N] [--max-dist N] [--min-score N]
-                ACTG|path[:id] in2
+                ACTG|path[:id] ACTG|path[:id]
 
 Align sequences and show them vertically interleaved
 
@@ -13,7 +13,7 @@ positional arguments:
                   or fastq file. If a path, optionally include a colon-
                   separated id to refer to identify a specific record in the
                   file.
-  in2             See in1
+  ACTG|path[:id]  Same as first input.
 
 optional arguments:
   -h, --help      show this help message and exit
