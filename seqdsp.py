@@ -174,8 +174,8 @@ def print_record(record, args):
 
 def start():
     parser = argparse.ArgumentParser(
-        description='Display FASTQ files in a more human-readable way.')
-    parser.add_argument('fastq_filenames', nargs='*', metavar='fname[:id]')
+        description='Display seqence files in a human-readable way.')
+    parser.add_argument('filenames', nargs='*', metavar='fname[:id]')
     parser.add_argument(
         '--colorize-quality', action='store_true',
         help='Color the quality line to show the quality visually.  Order, '
@@ -231,7 +231,7 @@ def start():
     run(args)
 
 def run(args):
-    for fname in args.fastq_filenames:
+    for fname in args.filenames:
         for record in interpret_sequence_argument(fname):
             print_record(record, args)
 

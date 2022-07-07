@@ -10,32 +10,30 @@ Align sequences and show them vertically interleaved
 
 positional arguments:
   ACTG|path[:id]  First input. Either a literal sequence or a path to a fasta
-  or
-                  fastq file. If a path, optionally include a colon-separated
-                  id
-                  to refer to identify a specific record in the file.
+                  or fastq file. If a path, optionally include a colon-
+                  separated id to refer to identify a specific record in the
+                  file.
   in2             See in1
 
 optional arguments:
   -h, --help      show this help message and exit
   --columns N     How many columns to wrap at. If unspecified, autodetects.
-  --max-dist N    How hard to try to avoid over-alignment when blocks have been
-                  substituted out.
-  --min-score N   Minimum score of alignment to print, counting matches as +1,
-                  mismatches as -1, and gaps as -1.
+  --max-dist N    How hard to try to avoid over-alignment when blocks have
+                  been substituted out.
+  --min-score N   Minimum score of alignment to print.
 ```
 
-## fastq_viewer.py
+## seqdsp.py
 
 ```
-usage: fastq_viewer.py [-h] [--colorize-quality] [--columns N] [--skip-lines]
-                       [--highlighted-only] [--show-quality]
-                       [--show-quality-when-highlighted] [--id-matches REGEX]
-                       [--seq-matches (REGEX|[rc]ACTG:EDITS)[:COLOR]]
-                       [--max-quality CHAR]
-                       [fname[:id] ...]
+usage: seqdsp.py [-h] [--colorize-quality] [--columns N] [--skip-lines]
+                 [--highlighted-only] [--show-quality]
+                 [--show-quality-when-highlighted] [--id-matches REGEX]
+                 [--seq-matches [rc]ACTG[:COLOR]] [--max-quality CHAR]
+                 [--min-score N]
+                 [fname[:id] ...]
 
-Display FASTQ files in a more human-readable way.
+Display seqence files in a human-readable way.
 
 positional arguments:
   fname[:id]
@@ -46,7 +44,7 @@ optional arguments:
                         Order, lowest to highest, is black, magenta, red,
                         yellow, white, green, blue, cyan.
   --columns N           How many columns to wrap at. If unspecified,
-  autodetects.
+                        autodetects.
   --skip-lines          Leave extra space between lines for readability.
   --highlighted-only    Only print sequences that have colored portions. For
                         example, the output of fuzzy_highlighter.
@@ -55,15 +53,17 @@ optional arguments:
                         Print quality lines corresponding to sequence lines
                         that have colored portions.
   --id-matches REGEX    Only print sequences whose id line matches the regex.
-  --seq-matches (REGEX|[rc]ACTG:EDITS)[:COLOR]
-                        Only print sequences which match the regex or sequence.
-                        May be specified multiple times, and sequences that
-                        match any will be printed. Colors are red, yellow, green,
-                        blue, magenta, cyan, white, and black.
+  --seq-matches [rc]ACTG[:COLOR]
+                        Only print matching sequence, or reverse complement if
+                        "rc" prefix is present. May bespecified multiple
+                        times, and sequences that match any will be printed.
+                        Colors are red, yellow, green, blue, magenta, cyan,
+                        white, and black.
   --max-quality CHAR    If your sequencer doesn't use the whole quality range,
                         set this to something smaller than '~' to make better
-                        use of the available colors. Ignored when
-                        --colorize-quality is false.
+                        use of the available colors. Ignored when --colorize-
+                        quality is false.
+  --min-score N         Minimum score of alignment to print.
 ```
 
 ## fuzzy_highlighter
