@@ -140,7 +140,8 @@ def start():
         help='First input.  Either a literal sequence or a path to a fasta '
         'or fastq file.  If a path, optionally include a colon-separated '
         'id to refer to identify a specific record in the file.')
-    parser.add_argument('ACTG|path[:id]', help='Same as first input.')
+    parser.add_argument(
+        'in2', metavar='ACTG|path[:id]', help='Same as first input.')
     parser.add_argument(
         '--columns', type=int, metavar='N',
         help='How many columns to wrap at.  If unspecified, autodetects.')
