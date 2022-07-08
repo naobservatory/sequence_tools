@@ -42,6 +42,13 @@ function check() {
     if [ -e "$gold" ] && diff "$tmp" "$gold" > /dev/null; then
       echo "Did not need to regold $gold"
     else
+      if [ -e "$gold" ]; then
+        echo "Previous gold:"
+        echo "--------------"
+        cat "$gold"
+        echo "Proposed gold:"
+        echo "-----_--------"
+      fi
       cat "$tmp"
       echo
       read -p "Is this correct? y/n > " -n 1 -r

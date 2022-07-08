@@ -25,6 +25,8 @@ COLORS = {
     'white_bold': '\x1b[1;37m',
 }
 COLOR_END = '\x1b[0m'
+BEGIN_UNDERLINE = '\x1b[4m'
+END_UNDERLINE = '\x1b[24m'
 
 def die(msg):
     print(COLORS['red'] + msg + COLOR_END)

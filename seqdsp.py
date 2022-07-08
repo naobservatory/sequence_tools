@@ -11,9 +11,10 @@ from Bio.Seq import Seq
 
 import ansiwrap # python3 -m pip install ansiwrap
 
-from util import COLORS, COLOR_END
+from util import COLORS, COLOR_END, BEGIN_UNDERLINE
 from util import die, guess_format_or_die, get_columns
 from util import interpret_sequence_argument
+from align import color_mismatches, collapse_subs
 
 def colorless_len(line):
     l1 = ansiwrap.ansilen(line)
@@ -128,14 +129,36 @@ def print_record(record, args):
 
             alignment_seq, _ = aligner.align(seq, seq_matcher)[0].aligned
             new_seq = []
-            pos = 0
-            for start, end in alignment_seq:
-                new_seq.append(seq[pos:start])
-                new_seq.append(COLORS[color])
-                new_seq.append(seq[start:end])
-                new_seq.append(COLOR_END)
-                pos = end
-            new_seq.append(seq[pos:])
+
+            if True:
+                alignment_start = alignment_seq[0][0]
+                alignment_end = alignment_seq[-1][-1]
+
+                # Now make a new alignment for just the matching portion
+                matching_alignment = aligner.align(
+                    seq[alignment_start:alignment_end], seq_matcher)[0]
+                seq1, seq2 = collapse_subs(matching_alignment, max_dist=4)
+                seq1, seq2 = color_mismatches(
+                    seq1, seq2,
+                    sub_color=COLORS[color] + BEGIN_UNDERLINE,
+                    del_color=COLORS[color] + BEGIN_UNDERLINE,
+                    match_color=COLORS[color])
+
+                # color_mismatches doesn't do exactly what we want:
+                #  - it doesn't highlight matches
+                #  - it ignores our highlight color
+                new_seq.append(seq[:alignment_start])
+                new_seq.append(seq1)
+                new_seq.append(seq[alignment_end:])
+            else:
+                pos = 0
+                for start, end in alignment_seq:
+                    new_seq.append(seq[pos:start])
+                    new_seq.append(COLORS[color])
+                    new_seq.append(seq[start:end])
+                    new_seq.append(COLOR_END)
+                    pos = end
+                new_seq.append(seq[pos:])
             seq = ''.join(new_seq)
             any_matched = True
 

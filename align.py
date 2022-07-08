@@ -28,7 +28,9 @@ def wrap(s, columns):
     if line:
         yield ''.join(line)
 
-def collapse_subs(seq1, seq2, max_dist):
+def collapse_subs(alignment, max_dist):
+    seq1, _, seq2, _ = str(alignment).split('\n')
+
     out1 = []
     out2 = []
 
@@ -53,32 +55,49 @@ def collapse_subs(seq1, seq2, max_dist):
 
     return ''.join(out1), ''.join(out2)
 
-def color_mismatches(seq1_line, seq2_line):
+def color_mismatches(
+        seq1_line, seq2_line,
+        ins_color=COLOR_GREEN,
+        del_color=COLOR_RED,
+        sub_color=COLOR_YELLOW,
+        match_color=COLOR_END):
+
     out1 = []
     out2 = []
+
+    ins_color = COLOR_END + ins_color
+    del_color = COLOR_END + del_color
+    sub_color = COLOR_END + sub_color
+    if match_color != COLOR_END:
+        match_color = COLOR_END + match_color
+        out1.append(match_color)
+        out2.append(match_color)
 
     for c1, c2 in zip(seq1_line, seq2_line):
         c1_color = None
         c2_color = None
         if c1 == '-':
-            c2_color = COLOR_GREEN
+            c2_color = ins_color
         elif c2 == '-':
-            c1_color = COLOR_RED
+            c1_color = del_color
         elif c1 != c2:
-            c1_color = COLOR_YELLOW
-            c2_color = COLOR_YELLOW
+            c1_color = sub_color
+            c2_color = sub_color
 
         if c1_color:
             out1.append(c1_color)
         out1.append(c1)
         if c1_color:
-            out1.append(COLOR_END)
+            out1.append(match_color)
 
         if c2_color:
             out2.append(c2_color)
         out2.append(c2)
         if c2_color:
-            out2.append(COLOR_END)
+            out2.append(match_color)
+    if match_color != COLOR_END:
+        out1.append(COLOR_END)
+        out2.append(COLOR_END)
 
     return ''.join(out1), ''.join(out2)
 
@@ -113,10 +132,7 @@ def align_and_print(rec1, rec2, args):
         #     alignment.score, len(seq1), len(seq2)))
         return
 
-    seq1_aligned, _, seq2_aligned, _ = str(alignment).split('\n')
-
-    seq1_aligned, seq2_aligned = collapse_subs(
-        seq1_aligned, seq2_aligned, args.max_dist)
+    seq1_aligned, seq2_aligned = collapse_subs(alignment, args.max_dist)
 
     if rec1.description:
         print('>%s' % rec1.description)
