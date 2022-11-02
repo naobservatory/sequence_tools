@@ -6,7 +6,8 @@ COLOR_RED = '\x1b[1;31m'
 COLOR_END = '\x1b[0m'
 
 def start():
-    out = [line.strip() for line in sys.stdin]
+    # remove final linebreak
+    out = [line[:-1] for line in sys.stdin]
     max_out = max(len(x) for x in out)
     highlight = []
     for col in range(max_out):
