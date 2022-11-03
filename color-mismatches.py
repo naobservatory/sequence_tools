@@ -1,25 +1,55 @@
 import sys
-
+import argparse
 from collections import Counter
 
 COLOR_RED = '\x1b[1;31m'
 COLOR_END = '\x1b[0m'
 
+def remove_count_prefixes_if_present(lines):
+    counts = []
+    out = []
+    for line in lines:
+        if line.count("\t") != 1:
+            break
+        count, line = line.split("\t")
+        if not count.isdigit():
+            break
+        out.append(line)
+        counts.append(int(count))
+    else:
+        # completed successfully
+        return counts, out
+
+    # not the right format, just put every count as equally common
+    return [1]*len(lines), lines
+
 def start():
+    parser = argparse.ArgumentParser(
+        description='Given horizontally aligned sequences,'
+                    ' highlight disagreement')
+    parser.add_argument(
+        '--min-count', type=int, default=0, metavar='N',
+        help="Sequences appearing less often won't be printed")
+    run(parser.parse_args())
+
+def run(args):
     # remove final linebreak
     out = [line[:-1] for line in sys.stdin]
+
+    counts, out = remove_count_prefixes_if_present(out)
+
     max_out = max(len(x) for x in out)
     highlight = []
     for col in range(max_out):
         bases = Counter()
-        for row in out:
+        for count, row in zip(counts, out):
             try:
                 val = row[col]
             except IndexError:
                 continue
 
             if val == ' ': continue
-            bases[val] += 1
+            bases[val] += count
 
         most_common_val = None
         most_common_vals = bases.most_common(1)
@@ -50,7 +80,8 @@ def start():
             COLOR_END,
             out[row][col+1:])
 
-    for line in out:
+    for count, line in zip(counts, out):
+        if count < args.min_count: continue
         print(line)
 
 
