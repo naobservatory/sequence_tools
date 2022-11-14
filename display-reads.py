@@ -1,9 +1,11 @@
+#!/usr/bin/python3
+
 # Usage: cat reads | display-reads.py contig
 
 import sys
 import re
 
-MIN_OVERLAP=40
+MIN_OVERLAP=10
 
 contig, = sys.argv[1:]
 
