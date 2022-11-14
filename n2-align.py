@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # Usage: n2-align.py in out contig
 #
 # in format: reads or fasta
@@ -13,6 +15,13 @@ if len(contig) <= MIN_OVERLAP:
     raise Exception(
         "contig %s (length=%s) must be longer than MIN_OVERLAP (%s)" % (
             contig, len(contig), MIN_OVERLAP))
+
+def rc(s):
+    return "".join({'T':'A',
+                    'G':'C',
+                    'A':'T',
+                    'C':'G',
+                    'N':'N'}[x] for x in reversed(s))
 
 def score_at(contig, read, contig_pos):
     score = 0
@@ -41,6 +50,7 @@ def align_read(read):
 
 with open(in_fname) as inf:
     with open(out_fname, "w") as outf:
+        seqid = ""
         for line in inf:
             line = line.strip()
             if line.startswith(">"):
@@ -48,6 +58,12 @@ with open(in_fname) as inf:
                 continue
             
             pos, score = align_read(line)
+            rc_line = rc(line)
+            rc_pos, rc_score = align_read(rc_line)
+
+            if rc_score > score:
+                line = rc_line
+                pos = rc_pos
 
             outf.write(">%s%spos=%s\n%s\n" % (
                 seqid,
