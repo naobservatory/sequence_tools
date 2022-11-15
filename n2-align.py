@@ -25,13 +25,19 @@ def rc(s):
 
 def score_at(contig, read, contig_pos):
     score = 0
+    matched = True
     for i in range(len(read)):
         read_val = read[i]
         contig_val = None
         if 0 <= contig_pos + i < len(contig):
             contig_val = contig[contig_pos + i]
-        if read_val == contig_val:
+        did_match = matched
+        matched = read_val == contig_val
+        if matched:
             score += 1
+        if did_match != matched:
+            score -= 1
+
     return score
 
 def align_read(read):
@@ -45,29 +51,30 @@ def align_read(read):
         if score > best_score:
             best_score = score
             best_contig_pos = contig_pos
-        
+
     return best_contig_pos, best_score
 
-with open(in_fname) as inf:
-    with open(out_fname, "w") as outf:
-        seqid = ""
-        for line in inf:
-            line = line.strip()
-            if line.startswith(">"):
-                seqid = line[1:]
-                continue
-            
-            pos, score = align_read(line)
-            rc_line = rc(line)
-            rc_pos, rc_score = align_read(rc_line)
+inf = sys.stdin if in_fname == "-" else open(in_fname)
+outf = sys.stdout if out_fname == "-" else open(out_fname, "w")
 
-            if rc_score > score:
-                line = rc_line
-                pos = rc_pos
+seqid = ""
+for line in inf:
+    line = line.strip()
+    if line.startswith(">"):
+        seqid = line[1:]
+        continue
 
-            outf.write(">%s%spos=%s\n%s\n" % (
-                seqid,
-                " "if seqid else "",
-                pos,
-                line))
-            seqid = ""
+    pos, score = align_read(line)
+    rc_line = rc(line)
+    rc_pos, rc_score = align_read(rc_line)
+
+    if rc_score > score:
+        line = rc_line
+        pos = rc_pos
+
+    outf.write(">%s%spos=%s\n%s\n" % (
+        seqid,
+        " "if seqid else "",
+        pos,
+        line))
+    seqid = ""
