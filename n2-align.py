@@ -65,7 +65,11 @@ for line in inf:
         continue
 
     pos, score = align_read(line)
-    rc_line = rc(line)
+    try:
+        rc_line = rc(line)
+    except Exception:
+        print(line)
+        raise
     rc_pos, rc_score = align_read(rc_line)
 
     if rc_score > score:

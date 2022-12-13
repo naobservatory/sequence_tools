@@ -29,7 +29,12 @@ def wrap(s, columns):
         yield ''.join(line)
 
 def collapse_subs(alignment, max_dist):
-    seq1, _, seq2, _ = str(alignment).split('\n')
+    # this needs relatively recent biopython
+    rows = str(alignment).split('\n')
+    targets = [row for row in rows if row.startswith("target")]
+    queries = [row for row in rows if row.startswith("query")]
+    seq1 = "".join(row.split()[-1] for row in targets)
+    seq2 = "".join(row.split()[-1] for row in queries)
 
     out1 = []
     out2 = []
