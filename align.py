@@ -30,7 +30,6 @@ def wrap(s, columns):
 
 def collapse_subs(alignment, max_dist):
     # this needs relatively recent biopython
-    print(alignment)
     rows = str(alignment).split('\n')
     targets = [row for row in rows if row.startswith("target")]
     queries = [row for row in rows if row.startswith("query")]
