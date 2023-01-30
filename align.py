@@ -30,19 +30,23 @@ def wrap(s, columns):
         yield ''.join(line)
 
 def collapse_subs(alignment, max_dist):
-    # this needs relatively recent biopython
-    rows = str(alignment).split('\n')
-    targets = [row for row in rows if row.startswith("target")]
-    queries = [row for row in rows if row.startswith("query")]
+    alignment_str = str(alignment)
+    if "target" in alignment_str:
+        # this needs relatively recent biopython
+        rows = str(alignment).split('\n')
+        targets = [row for row in rows if row.startswith("target")]
+        queries = [row for row in rows if row.startswith("query")]
 
-    def extract_seq(row):
-        pieces = row.split()
-        while pieces[-1].isdigit():
-            pieces.pop()
-        return pieces[-1]
+        def extract_seq(row):
+            pieces = row.split()
+            while pieces[-1].isdigit():
+                pieces.pop()
+            return pieces[-1]
     
-    seq1 = "".join(extract_seq(row) for row in targets)
-    seq2 = "".join(extract_seq(row) for row in queries)
+        seq1 = "".join(extract_seq(row) for row in targets)
+        seq2 = "".join(extract_seq(row) for row in queries)
+    else:
+        seq1, _, seq2, _ = alignment_str.split('\n')
 
     out1 = []
     out2 = []
