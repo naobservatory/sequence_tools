@@ -170,27 +170,31 @@ def align_and_print(rec1, rec2, args):
                                     wrap(seq2_aligned, args.columns)):
         seq1_line, seq2_line = color_mismatches(seq1_line, seq2_line)
         if args.print_progress:
-            progress_1_start_str = str(progress_1)
+            progress_1_start_str = "%s (%.0f%%)" % (
+                progress_1, 100 * progress_1 / len(seq1))
             progress_1 += count_bases_in_printable_line(seq1_line)
-            progress_1_end_str = str(progress_1)
+            progress_1_end_str = "(%.0f%%) %s" % (
+                100 * progress_1 / len(seq1), progress_1)
             print("%s%s%s" % (
                 progress_1_start_str,
-                " "*(len(rmcolor(seq1_line))
+                " "*(max(1, len(rmcolor(seq1_line))
                      - len(progress_1_start_str)
-                     - len(progress_1_end_str)),
+                     - len(progress_1_end_str))),
                 progress_1_end_str))
 
         print(seq1_line)
         print(seq2_line)
         if args.print_progress:
-            progress_2_start_str = str(progress_2)
+            progress_2_start_str = "%s (%.0f%%)" % (
+                progress_2, 100 * progress_2 / len(seq2))
             progress_2 += count_bases_in_printable_line(seq2_line)
-            progress_2_end_str = str(progress_2)
+            progress_2_end_str = "(%.0f%%) %s" % (
+                100 * progress_2 / len(seq2), progress_2)
             print("%s%s%s" % (
                 progress_2_start_str,
-                " "*(len(rmcolor(seq2_line))
+                " "*(max(1, len(rmcolor(seq2_line))
                      - len(progress_2_start_str)
-                     - len(progress_2_end_str)),
+                     - len(progress_2_end_str))),
                 progress_2_end_str))
 
         print()
