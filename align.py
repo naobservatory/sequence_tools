@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 import os
+import re
+import sys
 import argparse
 import itertools
-import sys
 
 from Bio import Align
 from Bio import SeqIO
@@ -113,12 +114,20 @@ def color_mismatches(
 
     return ''.join(out1), ''.join(out2)
 
+color_regex  =re.compile(r'\x1b\[[01](;3[123])?m')
+def rmcolor(line):
+    return color_regex.sub('', line)
+
 def run(args):
     recs1 = interpret_sequence_argument(args.in1)
     recs2 = interpret_sequence_argument(args.in2)
 
     for rec1, rec2 in itertools.product(recs1, recs2):
         align_and_print(rec1, rec2, args)
+
+def count_bases_in_printable_line(line):
+    return len(rmcolor(line).replace("-", ""))
+
 
 def align_and_print(rec1, rec2, args):
     seq1, seq2 = rec1.seq, rec2.seq
@@ -151,12 +160,35 @@ def align_and_print(rec1, rec2, args):
     if rec2.description:
         print('>%s' % rec2.description)
 
-    for seq1_line, seq2_line in zip(
-            wrap(seq1_aligned, args.columns),
-            wrap(seq2_aligned, args.columns)):
+    progress_1 = 0
+    progress_2 = 0
+    for seq1_line, seq2_line in zip(wrap(seq1_aligned, args.columns),
+                                    wrap(seq2_aligned, args.columns)):
         seq1_line, seq2_line = color_mismatches(seq1_line, seq2_line)
+        if args.print_progress:
+            progress_1_start_str = str(progress_1)
+            progress_1 += count_bases_in_printable_line(seq1_line)
+            progress_1_end_str = str(progress_1)
+            print("%s%s%s" % (
+                progress_1_start_str,
+                " "*(len(rmcolor(seq1_line))
+                     - len(progress_1_start_str)
+                     - len(progress_1_end_str)),
+                progress_1_end_str))
+
         print(seq1_line)
         print(seq2_line)
+        if args.print_progress:
+            progress_2_start_str = str(progress_2)
+            progress_2 += count_bases_in_printable_line(seq2_line)
+            progress_2_end_str = str(progress_2)
+            print("%s%s%s" % (
+                progress_2_start_str,
+                " "*(len(rmcolor(seq2_line))
+                     - len(progress_2_start_str)
+                     - len(progress_2_end_str)),
+                progress_2_end_str))
+
         print()
 
 def start():
@@ -180,6 +212,9 @@ def start():
     parser.add_argument(
         '--min-score', type=int, metavar='N', default=40,
         help='Minimum score of alignment to print.')
+    parser.add_argument(
+        '--print-progress', action='store_true',
+        help='Mark lines with how far along the genomes they represent.')
     args = parser.parse_args()
 
     if not args.columns:
