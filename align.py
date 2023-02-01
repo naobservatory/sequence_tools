@@ -43,7 +43,7 @@ def collapse_subs(alignment, max_dist):
             while pieces[-1].isdigit():
                 pieces.pop()
             return pieces[-1]
-    
+
         seq1 = "".join(extract_seq(row) for row in targets)
         seq2 = "".join(extract_seq(row) for row in queries)
     else:
@@ -134,7 +134,7 @@ def count_bases_in_printable_line(line):
     return len(rmcolor(line).replace("-", ""))
 
 def print_moving_average_tsv(seq1_aligned, seq2_aligned, args):
-    
+
     headers = ["position", "match", "average"]
     rows = []
     for i, (b1, b2) in enumerate(zip(seq1_aligned, seq2_aligned)):
@@ -147,7 +147,7 @@ def print_moving_average_tsv(seq1_aligned, seq2_aligned, args):
     for i in range(-100, 101):
         weights[i] = (np.pi * standard_deviation) * np.exp(
             -0.5*((i-normal_distribution_mean)/standard_deviation)**2)
-        
+
     for i in range(len(rows)):
         t = 0
         s = 0
@@ -155,13 +155,33 @@ def print_moving_average_tsv(seq1_aligned, seq2_aligned, args):
             if 0 <= i + j < len(rows):
                 t += w
                 s += rows[i+j][1]*w
-        
+
         rows[i][2] = s/t
 
     print("\t".join(headers))
     for position, match, average in rows:
         print("%s\t%s\t%.4f" % (position, match, average))
-        
+
+def trim_seqs(seq_a, seq_b, start_pos_a):
+    progress_a = 0
+    trimmed_a = []
+    trimmed_b = []
+    offset_a = 0
+    offset_b = 0
+    for a, b in zip(seq_a, seq_b):
+        if a != "-":
+            progress_a += 1
+        if progress_a > start_pos_a:
+            trimmed_a.append(a)
+            trimmed_b.append(b)
+        else:
+            if a != "-":
+                offset_a += 1
+            if b != "-":
+                offset_b += 1
+
+    return "".join(trimmed_a), "".join(trimmed_b), offset_a, offset_b
+
 def align_and_print(rec1, rec2, args):
     seq1, seq2 = rec1.seq, rec2.seq
 
@@ -191,7 +211,7 @@ def align_and_print(rec1, rec2, args):
     if args.moving_average_tsv:
         print_moving_average_tsv(seq1_aligned, seq2_aligned, args)
         return
-        
+
     if rec1.description:
         print('>%s' % rec1.description)
     if rec2.description:
@@ -199,6 +219,17 @@ def align_and_print(rec1, rec2, args):
 
     progress_1 = 0
     progress_2 = 0
+    if args.start_pos:
+        seq_num, start_pos = args.start_pos.split(":")
+        seq_num = int(seq_num)
+        start_pos = int(start_pos)
+        if seq_num == 1:
+            seq1_aligned, seq2_aligned, progress_1, progress_2 = trim_seqs(
+                seq1_aligned, seq2_aligned, start_pos)
+        else:
+            seq2_aligned, seq1_aligned, progress_2, progress_1 = trim_seqs(
+                seq2_aligned, seq1_aligned, start_pos)
+
     for seq1_line, seq2_line in zip(wrap(seq1_aligned, args.columns),
                                     wrap(seq2_aligned, args.columns)):
         seq1_line, seq2_line = color_mismatches(seq1_line, seq2_line)
@@ -256,6 +287,9 @@ def start():
     parser.add_argument(
         '--print-progress', action='store_true',
         help='Mark lines with how far along the genomes they represent.')
+    parser.add_argument(
+        '--start-pos', type=str, metavar='[1:2]:N', default='',
+        help='Start position, as bases into either sequence 1 or 1')
     parser.add_argument(
         '--moving-average-tsv', action='store_true',
         help='Instead of printing bases, output a tsv of how well these '
