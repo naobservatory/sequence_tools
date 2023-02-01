@@ -3,6 +3,7 @@
 import os
 import re
 import sys
+import numpy as np
 import argparse
 import itertools
 
@@ -132,7 +133,35 @@ def run(args):
 def count_bases_in_printable_line(line):
     return len(rmcolor(line).replace("-", ""))
 
+def print_moving_average_tsv(seq1_aligned, seq2_aligned, args):
+    
+    headers = ["position", "match", "average"]
+    rows = []
+    for i, (b1, b2) in enumerate(zip(seq1_aligned, seq2_aligned)):
+        rows.append([i, 1 if b1 == b2 else 0, None])
 
+    # set the weights to a gaussian centered at zero
+    weights = {}
+    normal_distribution_mean = 0
+    standard_deviation = args.moving_average_width
+    for i in range(-100, 101):
+        weights[i] = (np.pi * standard_deviation) * np.exp(
+            -0.5*((i-normal_distribution_mean)/standard_deviation)**2)
+        
+    for i in range(len(rows)):
+        t = 0
+        s = 0
+        for j, w in weights.items():
+            if 0 <= i + j < len(rows):
+                t += w
+                s += rows[i+j][1]*w
+        
+        rows[i][2] = s/t
+
+    print("\t".join(headers))
+    for position, match, average in rows:
+        print("%s\t%s\t%.4f" % (position, match, average))
+        
 def align_and_print(rec1, rec2, args):
     seq1, seq2 = rec1.seq, rec2.seq
 
@@ -159,6 +188,10 @@ def align_and_print(rec1, rec2, args):
 
     seq1_aligned, seq2_aligned = collapse_subs(alignment, args.max_dist)
 
+    if args.moving_average_tsv:
+        print_moving_average_tsv(seq1_aligned, seq2_aligned, args)
+        return
+        
     if rec1.description:
         print('>%s' % rec1.description)
     if rec2.description:
@@ -223,6 +256,14 @@ def start():
     parser.add_argument(
         '--print-progress', action='store_true',
         help='Mark lines with how far along the genomes they represent.')
+    parser.add_argument(
+        '--moving-average-tsv', action='store_true',
+        help='Instead of printing bases, output a tsv of how well these '
+        'genomes align.')
+    parser.add_argument(
+        '--moving-average-width', type=int, metavar='N', default=40,
+        help='Standard deviation of the moving average. '
+        'Ignored unless --moving-average-tsv.')
     args = parser.parse_args()
 
     if not args.columns:
