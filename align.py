@@ -306,4 +306,8 @@ def start():
     run(args)
 
 if __name__ == '__main__':
-    start()
+    try:
+        start()
+    except BrokenPipeError:
+        sys.stderr.close()
+        pass
