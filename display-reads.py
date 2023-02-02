@@ -41,16 +41,35 @@ def run(args):
     if contig_offset < 0:
         contig_offset = 0
 
+    def space(n):
+        if not args.show_indexes:
+            return " " * n
+
+        spacer = []
+        for i in range(n):
+            spacer.append("|" if i % 10 == 0 else " ")
+        return "".join(spacer)
+
+    def trailer(n):
+        if not args.show_indexes:
+            return ""
+
+        spacer = []
+        for i in range(n, len(args.contig)):
+            spacer.append("|" if i % 10 == 0 else " ")
+        return "".join(spacer)
+
     if args.show_indexes:
         index_row = ""
         for i in range(0, len(args.contig), 10):
             index_row += str(i).ljust(10)
-        print("%s%s" % (" "*contig_offset, index_row))    
-    print("%s%s" % (" "*contig_offset, args.contig))
+        print("%s%s" % (space(contig_offset), index_row))
+    print("%s%s" % (space(contig_offset), args.contig))
 
     for contig_pos, read in reads:
-        print("%s%s" % (
-            " "*(contig_pos + contig_offset), read))
+        print("%s%s%s" % (
+            space(contig_pos + contig_offset), read,
+            trailer(contig_pos + len(read))))
 
 if __name__ == "__main__":
     start()

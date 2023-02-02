@@ -7,7 +7,7 @@ from collections import Counter
 COLOR_RED = '\x1b[1;31m'
 COLOR_CYAN = '\x1b[1;36m'
 COLOR_END = '\x1b[0m'
-
+IGNORE_CHARS = ' |'
 def remove_count_prefixes_if_present(lines):
     counts = []
     out = []
@@ -44,7 +44,7 @@ def run(args):
     if out and re.match("^[0-9 ]*$", out[0]):
         print(COLOR_CYAN + out[0] + COLOR_END)
         out = out[1:]
-    
+
     max_out = max(len(x) for x in out)
     highlight = []
     for col in range(max_out):
@@ -55,7 +55,7 @@ def run(args):
             except IndexError:
                 continue
 
-            if val == ' ': continue
+            if val in IGNORE_CHARS: continue
             bases[val] += count
 
         most_common_val = None
@@ -74,7 +74,7 @@ def run(args):
             except IndexError:
                 continue
 
-            if val == ' ': continue
+            if val in IGNORE_CHARS: continue
 
             if val != most_common_val:
                 highlight.append((row, col))
