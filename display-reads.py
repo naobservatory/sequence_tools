@@ -12,6 +12,7 @@ def start():
     parser.add_argument('--input',
                         metavar='foo.aligned.fasta',
                         default="/dev/stdin")
+    parser.add_argument("--show-indexes", action='store_true')
     parser.add_argument(
         '--sort',
         action=argparse.BooleanOptionalAction,
@@ -40,6 +41,11 @@ def run(args):
     if contig_offset < 0:
         contig_offset = 0
 
+    if args.show_indexes:
+        index_row = ""
+        for i in range(0, len(args.contig), 10):
+            index_row += str(i).ljust(10)
+        print("%s%s" % (" "*contig_offset, index_row))    
     print("%s%s" % (" "*contig_offset, args.contig))
 
     for contig_pos, read in reads:
