@@ -1,45 +1,50 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-# Usage: cat reads | display-reads.py contig
-
-import sys
 import re
+import sys
+import argparse
+from Bio.SeqIO.FastaIO import SimpleFastaParser
 
-MIN_OVERLAP=10
+def start():
+    parser = argparse.ArgumentParser(
+        description='Take fasta marked up with alignment information and '
+        'display them horizontally aligned')
+    parser.add_argument('--input',
+                        metavar='foo.aligned.fasta',
+                        default="/dev/stdin")
+    parser.add_argument(
+        '--sort',
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help='Sort lines before printing.  Use when order in the input file '
+        'is not meaningful.')
+    parser.add_argument(
+        "contig",
+        help='The contig the input was aligned to, for displaying as a header')
+    run(parser.parse_args())
 
-contig, = sys.argv[1:]
+def run(args):
+    reads = []
+    with open(args.input) as inf:
+        for seqid, seq in SimpleFastaParser(inf):
+            pos, = re.findall("pos=([-0-9]+)", seqid)
+            reads.append((int(pos), seq))
 
-if len(contig) <= MIN_OVERLAP:
-    raise Exception(
-        "contig (length=%s) must be longer than MIN_OVERLAP (%s)" % (
-            len(contig), MIN_OVERLAP))
+    if not reads:
+        raise Exception("no reads: supply on stdin or set --input")
 
-reads = []
-for line in sys.stdin:
-    line = line.strip()
-    if line.startswith(">"):
-        seqid = line[1:]
-        continue
+    if args.sort:
+        reads.sort()
 
-    pos, = re.findall("pos=([-0-9]+)", seqid)
-    pos = int(pos)
-    
-    reads.append((int(pos), line))
-    seqid = None
+    contig_offset = -sorted(reads)[0][0]
+    if contig_offset < 0:
+        contig_offset = 0
 
-if not reads:
-    raise Exception("no reads -- supply on stdin")
-    
-reads.sort()
+    print("%s%s" % (" "*contig_offset, args.contig))
 
-contig_offset = -reads[0][0]
-if contig_offset < 0:
-    contig_offset = 0
+    for contig_pos, read in reads:
+        print("%s%s" % (
+            " "*(contig_pos + contig_offset), read))
 
-print("%s%s" % (
-    " "*contig_offset, contig))
-
-for contig_pos, read in reads:
-    print("%s%s" % (
-        " "*(contig_pos + contig_offset), read))
-
+if __name__ == "__main__":
+    start()
