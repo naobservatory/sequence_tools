@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+import re
 import sys
 import argparse
 from collections import Counter
 
 COLOR_RED = '\x1b[1;31m'
+COLOR_CYAN = '\x1b[1;36m'
 COLOR_END = '\x1b[0m'
 
 def remove_count_prefixes_if_present(lines):
@@ -39,6 +41,10 @@ def run(args):
 
     counts, out = remove_count_prefixes_if_present(out)
 
+    if out and re.match("^[0-9 ]*$", out[0]):
+        print(COLOR_CYAN + out[0] + COLOR_END)
+        out = out[1:]
+    
     max_out = max(len(x) for x in out)
     highlight = []
     for col in range(max_out):
