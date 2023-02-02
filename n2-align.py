@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # Usage: n2-align.py in out contig
 #
@@ -6,6 +6,7 @@
 # out format: annotated fasta
 
 import sys
+from Bio.SeqIO.FastaIO import SimpleFastaParser
 
 MIN_OVERLAP=5
 
@@ -57,28 +58,18 @@ def align_read(read):
 inf = sys.stdin if in_fname == "-" else open(in_fname)
 outf = sys.stdout if out_fname == "-" else open(out_fname, "w")
 
-seqid = ""
-for line in inf:
-    line = line.strip()
-    if line.startswith(">"):
-        seqid = line[1:]
-        continue
-
-    pos, score = align_read(line)
+for seqid, seq in SimpleFastaParser(inf):
+    pos, score = align_read(seq)
     try:
-        rc_line = rc(line)
+        rc_seq = rc(seq)
     except Exception:
-        print(line)
+        print(seq)
         raise
-    rc_pos, rc_score = align_read(rc_line)
+    rc_pos, rc_score = align_read(rc_seq)
 
     if rc_score > score:
-        line = rc_line
+        seq = rc_seq
         pos = rc_pos
 
     outf.write(">%s%spos=%s\n%s\n" % (
-        seqid,
-        " "if seqid else "",
-        pos,
-        line))
-    seqid = ""
+        seqid, " "if seqid else "", pos, seq))
