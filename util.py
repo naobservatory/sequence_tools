@@ -78,11 +78,21 @@ def get_columns():
     return 80
 
 def interpret_sequence_argument(arg_in):
+    is_rc = False
+    if arg_in.startswith("rc:"):
+        arg_in = arg_in.removeprefix("rc:")
+        is_rc = True
+
     if ':' in arg_in:
         seq, seq_id = arg_in.split(':')
     else:
         seq = arg_in
         seq_id = None
+
+    def maybe_rc(record):
+        if is_rc:
+            record.seq = record.seq.reverse_complement()
+        return record
 
     if os.path.exists(seq):
         # sequences on disk
@@ -92,12 +102,12 @@ def interpret_sequence_argument(arg_in):
             if seq_id:
                 for record in records:
                     if record.id == seq_id:
-                        return [record]
+                        return [maybe_rc(record)]
                 else:
                     die('Sequence %r not found in %r' % (
                         seq_id, fnamer))
             else:
-                return list(records)
+                return [maybe_rc(record) for record in records]
     else:
         # raw on the command line
-        return [SeqRecord(Seq(seq), description='')]
+        return [maybe_rc(SeqRecord(Seq(seq), description=''))]
