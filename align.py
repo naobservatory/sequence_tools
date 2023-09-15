@@ -232,13 +232,26 @@ def align_and_print(rec1, rec2, args):
 
     for seq1_line, seq2_line in zip(wrap(seq1_aligned, args.columns),
                                     wrap(seq2_aligned, args.columns)):
+        if args.chart:
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(figsize=(10, 2), constrained_layout=True)
+
+            xs = range(progress_1,
+                       progress_1 + len(seq1_line))
+
+            ax.plot(xs, list(seq1_line), label="Reference", color="blue")
+            ax.plot(xs, list(seq2_line), label="Query", color="green")
+
+            plt.show()
+            plt.clf()
+
         seq1_line, seq2_line = color_mismatches(seq1_line, seq2_line)
+        progress_1_start_str = "%s (%.0f%%)" % (
+            progress_1, 100 * progress_1 / len(seq1))
+        progress_1 += count_bases_in_printable_line(seq1_line)
+        progress_1_end_str = "(%.0f%%) %s" % (
+            100 * progress_1 / len(seq1), progress_1)
         if args.print_progress:
-            progress_1_start_str = "%s (%.0f%%)" % (
-                progress_1, 100 * progress_1 / len(seq1))
-            progress_1 += count_bases_in_printable_line(seq1_line)
-            progress_1_end_str = "(%.0f%%) %s" % (
-                100 * progress_1 / len(seq1), progress_1)
             print("%s%s%s" % (
                 progress_1_start_str,
                 " "*(max(1, len(rmcolor(seq1_line))
@@ -248,12 +261,12 @@ def align_and_print(rec1, rec2, args):
 
         print(seq1_line)
         print(seq2_line)
+        progress_2_start_str = "%s (%.0f%%)" % (
+            progress_2, 100 * progress_2 / len(seq2))
+        progress_2 += count_bases_in_printable_line(seq2_line)
+        progress_2_end_str = "(%.0f%%) %s" % (
+            100 * progress_2 / len(seq2), progress_2)
         if args.print_progress:
-            progress_2_start_str = "%s (%.0f%%)" % (
-                progress_2, 100 * progress_2 / len(seq2))
-            progress_2 += count_bases_in_printable_line(seq2_line)
-            progress_2_end_str = "(%.0f%%) %s" % (
-                100 * progress_2 / len(seq2), progress_2)
             print("%s%s%s" % (
                 progress_2_start_str,
                 " "*(max(1, len(rmcolor(seq2_line))
@@ -298,6 +311,9 @@ def start():
         '--moving-average-width', type=int, metavar='N', default=40,
         help='Standard deviation of the moving average. '
         'Ignored unless --moving-average-tsv.')
+    parser.add_argument(
+        '--chart', action='store_true',
+        help='visualize the alignment with some squiggles')
     args = parser.parse_args()
 
     if not args.columns:
