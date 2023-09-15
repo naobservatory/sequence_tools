@@ -232,7 +232,10 @@ def align_and_print(rec1, rec2, args):
 
     for seq1_line, seq2_line in zip(wrap(seq1_aligned, args.columns),
                                     wrap(seq2_aligned, args.columns)):
-        if args.chart:
+        if (args.chart and
+            not all(c == "-" for c in seq1_line) and
+            not all(c == "-" for c in seq2_line)):
+            
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots(figsize=(10, 2), constrained_layout=True)
 
@@ -243,7 +246,7 @@ def align_and_print(rec1, rec2, args):
             ax.plot(xs, list(seq2_line), label="Query", color="green")
 
             plt.show()
-            plt.clf()
+            plt.close()
 
         seq1_line, seq2_line = color_mismatches(seq1_line, seq2_line)
         progress_1_start_str = "%s (%.0f%%)" % (
