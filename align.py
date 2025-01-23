@@ -206,6 +206,10 @@ def align_and_print(rec1, rec2, args):
         #     alignment.score, len(seq1), len(seq2)))
         return
 
+    if args.just_print_copyable_alignment:
+        print(alignment)
+        return
+    
     seq1_aligned, seq2_aligned = collapse_subs(alignment, args.max_dist)
 
     if args.moving_average_tsv:
@@ -317,6 +321,10 @@ def start():
     parser.add_argument(
         '--chart', action='store_true',
         help='visualize the alignment with some squiggles')
+    parser.add_argument(
+        '--just-print-copyable-alignment', action='store_true',
+        help='Ignore any other settings and just use the default BioPython '
+             'alignment pretty printing')
     args = parser.parse_args()
 
     if not args.columns:
