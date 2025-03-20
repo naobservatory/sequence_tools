@@ -1,0 +1,85 @@
+>fq1
+>fq1
+0 (0%)                                                                  (42%) 80
+CGGTAGCCAGCTGCGTTCAGTATGGAAGATTTGATTTGTTTAGCGATCGCCATACTACCGTGACAAGAAAGTTGTCAGTC
+CGGTAGCCAGCTGCGTTCAGTATGGAAGATTTGATTTGTTTAGCGATCGCCATACTACCGTGACAAGAAAGTTGTCAGTC
+0 (0%)                                                                  (42%) 80
+
+80 (42%)                                                               (85%) 160
+TTTGTGACTTGCCTGTCGCTCTATCTTCCAGACTCCTTGGTCCGTGTTCAATCCCGGTAGTAGCGACGGGCGGTGTATGT
+TTTGTGACTTGCCTGTCGCTCTATCTTCCAGACTCCTTGGTCCGTGTTCAATCCCGGTAGTAGCGACGGGCGGTGTATGT
+80 (42%)                                                               (85%) 160
+
+160 (85%)          (100%) 189
+ATTATCAGCGCAACAGAAACAAAGACACC
+ATTATCAGCGCAACAGAAACAAAGACACC
+160 (85%)          (100%) 189
+
+>fq1
+>fq2
+0 (0%)                                                                  (39%) 73
+[0m[1;31mC[0m[0m[1;31mG[0m[0m[1;31mG[0m[0m[1;31mT[0m[0m[1;31mA[0m[0m[1;31mG[0m[0m[1;31mC[0m[0m[1;31mC[0m[0m[1;31mA[0m[0m[1;31mG[0m[0m[1;31mC[0m[0m[1;31mT[0m[0m[1;31mG[0m[0m[1;31mC[0m[0m[1;31mG[0m[0m[1;31mT[0m[0m[1;31mT[0m[0m[1;31mC[0m[0m[1;31mA[0m[0m[1;31mG[0m[0m[1;31mT[0m[0m[1;33mA[0m[0m[1;33mT[0m[0m[1;33mG[0mG[0m[1;33mA[0mA[0m[1;33mG[0mA[0m[1;33mT[0m----TT-GATTT-GTTT[0m[1;33mA[0m[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mG[0m[0m[1;33mA[0m[0m[1;33mT[0m[0m[1;33mC[0m[0m[1;33mG[0m[0m[1;31mC[0mCA[0m[1;33mT[0m[0m[1;33mA[0mCTACCGTGAC-AAGAAAGTT
+---------------------[0m[1;33mG[0m[0m[1;33mA[0m[0m[1;33mT[0mG[0m[1;33mC[0mA[0m[1;33mT[0mA[0m[1;33mC[0m[0m[1;32mT[0m[0m[1;32mT[0m[0m[1;32mC[0m[0m[1;32mG[0mTT[0m[1;32mC[0mGATTT[0m[1;32mC[0mGTTT[0m[1;33mC[0m[0m[1;33mA[0m[0m[1;33mA[0m[0m[1;33mC[0m[0m[1;33mT[0m[0m[1;33mG[0m[0m[1;33mG[0m[0m[1;33mA[0m-CA[0m[1;33mA[0m[0m[1;33mC[0mCTACCGTGAC[0m[1;32mA[0mAAGAAAGTT
+0 (0%)                                                                  (33%) 58
+
+73 (39%)                                                               (77%) 145
+GTC-A[0m[1;33mG[0m[0m[1;33mT[0mCTTTGTGACTTG[0m[1;31mC[0mCTGTC[0m[1;31mG[0mCTCTATCTT[0m[1;31mC[0mCAGACTCCTTGGTCC[0m[1;33mG[0mT[0m[1;33mG[0mT[0m[1;33mT[0m[0m[1;33mC[0mA[0m[1;33mA[0m[0m[1;33mT[0mCC-------C[0m[1;33mG[0mGTAGTAGCG
+GTC[0m[1;32mG[0mA[0m[1;33mT[0m[0m[1;33mG[0mCTTTGTGACTTG-CTGTC-CTCTATCTT-CAGACTCCTTGGTCC[0m[1;33mA[0mT[0m[1;33mT[0mT[0m[1;33mC[0m[0m[1;33mA[0mA[0m[1;33mG[0m[0m[1;33mA[0mCC[0m[1;32mA[0m[0m[1;32mA[0m[0m[1;32mA[0m[0m[1;32mC[0m[0m[1;32mA[0m[0m[1;32mA[0m[0m[1;32mT[0mC[0m[1;33mA[0mGTAGTAGCG
+58 (33%)                                                               (76%) 135
+
+145 (77%)                         (100%) 189
+ACGGGCGGTGT[0m[1;31mA[0m[0m[1;33mT[0mG[0m[1;33mT[0mA[0m[1;33mT[0mTATC[0m[1;33mA[0m[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mA[0mA[0m[1;33mC[0m[0m[1;33mA[0mGAAACA[0m[1;33mA[0mA[0m[1;33mG[0mA[0m[1;33mC[0mA[0m[1;33mC[0m[0m[1;33mC[0m
+ACGGGCGGTGT-[0m[1;33mG[0mG[0m[1;33mC[0mA[0m[1;33mA[0mTATC[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mT[0m[0m[1;33mT[0m[0m[1;33mT[0m[0m[1;33mC[0mA[0m[1;33mA[0m[0m[1;33mC[0mGAAACA[0m[1;33mC[0mA[0m[1;33mA[0mA[0m[1;33mG[0mA[0m[1;33mA[0m[0m[1;33mT[0m
+135 (76%)                         (100%) 178
+
+>fq2
+>fq1
+0 (0%)                                                                  (33%) 58
+---------------------[0m[1;33mG[0m[0m[1;33mA[0m[0m[1;33mT[0mG[0m[1;33mC[0mA[0m[1;33mT[0mA[0m[1;33mC[0m[0m[1;31mT[0m[0m[1;31mT[0m[0m[1;31mC[0m[0m[1;31mG[0mTT[0m[1;31mC[0mGATTT[0m[1;31mC[0mGTTT[0m[1;33mC[0m[0m[1;33mA[0m[0m[1;33mA[0m[0m[1;33mC[0m[0m[1;33mT[0m[0m[1;33mG[0m[0m[1;33mG[0m[0m[1;33mA[0m-CA[0m[1;33mA[0m[0m[1;33mC[0mCTACCGTGAC[0m[1;31mA[0mAAGAAAGTT
+[0m[1;32mC[0m[0m[1;32mG[0m[0m[1;32mG[0m[0m[1;32mT[0m[0m[1;32mA[0m[0m[1;32mG[0m[0m[1;32mC[0m[0m[1;32mC[0m[0m[1;32mA[0m[0m[1;32mG[0m[0m[1;32mC[0m[0m[1;32mT[0m[0m[1;32mG[0m[0m[1;32mC[0m[0m[1;32mG[0m[0m[1;32mT[0m[0m[1;32mT[0m[0m[1;32mC[0m[0m[1;32mA[0m[0m[1;32mG[0m[0m[1;32mT[0m[0m[1;33mA[0m[0m[1;33mT[0m[0m[1;33mG[0mG[0m[1;33mA[0mA[0m[1;33mG[0mA[0m[1;33mT[0m----TT-GATTT-GTTT[0m[1;33mA[0m[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mG[0m[0m[1;33mA[0m[0m[1;33mT[0m[0m[1;33mC[0m[0m[1;33mG[0m[0m[1;32mC[0mCA[0m[1;33mT[0m[0m[1;33mA[0mCTACCGTGAC-AAGAAAGTT
+0 (0%)                                                                  (39%) 73
+
+58 (33%)                                                               (76%) 135
+GTC[0m[1;33mG[0m[0m[1;33mA[0mT[0m[1;31mG[0mCTTTGTGACTTG-CTGTC-CTCTATCTT-CAGACTCCTTGGTCC[0m[1;33mA[0mT[0m[1;33mT[0mT[0m[1;33mC[0m[0m[1;33mA[0mA[0m[1;33mG[0m[0m[1;33mA[0mCC[0m[1;31mA[0m[0m[1;31mA[0m[0m[1;31mA[0m[0m[1;31mC[0m[0m[1;31mA[0m[0m[1;31mA[0m[0m[1;31mT[0mC[0m[1;33mA[0mGTAGTAGCG
+GTC[0m[1;33mA[0m[0m[1;33mG[0mT-CTTTGTGACTTG[0m[1;32mC[0mCTGTC[0m[1;32mG[0mCTCTATCTT[0m[1;32mC[0mCAGACTCCTTGGTCC[0m[1;33mG[0mT[0m[1;33mG[0mT[0m[1;33mT[0m[0m[1;33mC[0mA[0m[1;33mA[0m[0m[1;33mT[0mCC-------C[0m[1;33mG[0mGTAGTAGCG
+73 (39%)                                                               (77%) 145
+
+135 (76%)                          (100%) 178
+ACGGGCGGTGT-[0m[1;33mG[0mG[0m[1;33mC[0mA[0m[1;33mA[0mTATC[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mT[0m[0m[1;33mT[0m[0m[1;33mT[0m[0m[1;33mC[0mA[0m[1;33mA[0m[0m[1;33mC[0mGAA[0m[1;31mA[0m[0m[1;33mC[0m[0m[1;33mA[0m[0m[1;33mC[0mAA[0m[1;33mA[0m[0m[1;33mG[0m[0m[1;33mA[0mA[0m[1;33mT[0m-
+ACGGGCGGTGT[0m[1;32mA[0m[0m[1;33mT[0mG[0m[1;33mT[0mA[0m[1;33mT[0mTATC[0m[1;33mA[0m[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mG[0m[0m[1;33mC[0m[0m[1;33mA[0mA[0m[1;33mC[0m[0m[1;33mA[0mGAA-[0m[1;33mA[0m[0m[1;33mC[0m[0m[1;33mA[0mAA[0m[1;33mG[0m[0m[1;33mA[0m[0m[1;33mC[0mA[0m[1;33mC[0m[0m[1;32mC[0m
+145 (77%)                          (100%) 189
+
+>fq2
+>fq2
+0 (0%)                                                                  (45%) 80
+GATGCATACTTCGTTCGATTTCGTTTCAACTGGACAACCTACCGTGACAAAGAAAGTTGTCGATGCTTTGTGACTTGCTG
+GATGCATACTTCGTTCGATTTCGTTTCAACTGGACAACCTACCGTGACAAAGAAAGTTGTCGATGCTTTGTGACTTGCTG
+0 (0%)                                                                  (45%) 80
+
+80 (45%)                                                               (90%) 160
+TCCTCTATCTTCAGACTCCTTGGTCCATTTCAAGACCAAACAATCAGTAGTAGCGACGGGCGGTGTGGCAATATCGCTTT
+TCCTCTATCTTCAGACTCCTTGGTCCATTTCAAGACCAAACAATCAGTAGTAGCGACGGGCGGTGTGGCAATATCGCTTT
+80 (45%)                                                               (90%) 160
+
+160 (90%) (100%) 178
+CAACGAAACACAAAGAAT
+CAACGAAACACAAAGAAT
+160 (90%) (100%) 178
+
+>fq3
+>fq3
+0 (0%)                                                                  (40%) 80
+GTTTTGTCGCTGCGTTCAGTTTATGGGTGCGGGTGTTATGATGCTTCGCTTTACGTGACAAGAAAGTTAGTAGATTGTCT
+GTTTTGTCGCTGCGTTCAGTTTATGGGTGCGGGTGTTATGATGCTTCGCTTTACGTGACAAGAAAGTTAGTAGATTGTCT
+0 (0%)                                                                  (40%) 80
+
+80 (40%)                                                               (80%) 160
+TTATGTTTCTGTGGTGCTGATATTGCCACACCGCCCGATAGCTCTACCGATTGAAACACGGACCAAGGAATCGGAAATGT
+TTATGTTTCTGTGGTGCTGATATTGCCACACCGCCCGATAGCTCTACCGATTGAAACACGGACCAAGGAATCGGAAATGT
+80 (40%)                                                               (80%) 160
+
+160 (80%)                      (100%) 201
+AGGCGAGCAGGCCGTCCTGAACACCCATTAACTTTCTTGTC
+AGGCGAGCAGGCCGTCCTGAACACCCATTAACTTTCTTGTC
+160 (80%)                      (100%) 201
+

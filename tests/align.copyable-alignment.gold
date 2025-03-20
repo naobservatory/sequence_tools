@@ -1,0 +1,80 @@
+target            0 CGGTAGCCAGCTGCGTTCAGTATGGAAGATTTGATTTGTTTAGCGATCGCCATACTACCG
+                  0 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query             0 CGGTAGCCAGCTGCGTTCAGTATGGAAGATTTGATTTGTTTAGCGATCGCCATACTACCG
+
+target           60 TGACAAGAAAGTTGTCAGTCTTTGTGACTTGCCTGTCGCTCTATCTTCCAGACTCCTTGG
+                 60 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query            60 TGACAAGAAAGTTGTCAGTCTTTGTGACTTGCCTGTCGCTCTATCTTCCAGACTCCTTGG
+
+target          120 TCCGTGTTCAATCCCGGTAGTAGCGACGGGCGGTGTATGTATTATCAGCGCAACAGAAAC
+                120 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query           120 TCCGTGTTCAATCCCGGTAGTAGCGACGGGCGGTGTATGTATTATCAGCGCAACAGAAAC
+
+target          180 AAAGACACC 189
+                180 ||||||||| 189
+query           180 AAAGACACC 189
+
+target            0 CGGTAGCCAGCTGCGTTCAGTATGGAAG-AT------TT-GATTT-GTTT-AGC--GATC
+                  0 ------------------------||.|-||------||-|||||-||||-|.|--||--
+query             0 ------------------------GATGCATACTTCGTTCGATTTCGTTTCAACTGGA--
+
+target           48 GCCATA-CTACCGTGAC-AAGAAAGTTGTC-A-GTCTTTGTGACTTGCCTGTCGCTCTAT
+                 60 --||-|-||||||||||-||||||||||||-|-|-||||||||||||-|||||-||||||
+query            34 --CA-ACCTACCGTGACAAAGAAAGTTGTCGATG-CTTTGTGACTTG-CTGTC-CTCTAT
+
+target          104 CTTCCAGACTCCTTGGTCCGTGTTCAA-TCC-------CGGTAGTAGCGACGGGCGGTGT
+                120 |||-|||||||||||||||.|-|||||-.||-------|.||||||||||||||||||||
+query            88 CTT-CAGACTCCTTGGTCCAT-TTCAAGACCAAACAATCAGTAGTAGCGACGGGCGGTGT
+
+target          156 ATGTATTATCAGC--GCAACAGAA--ACAAAGA--CACC 189
+                180 -.|.|.||||-||--.||||-|||--|||||||------ 219
+query           146 -GGCAATATC-GCTTTCAAC-GAAACACAAAGAAT---- 178
+
+target            0 ------------------------GATGCATACTTCGTTCGATTTCGTTTCAACTGGA--
+                  0 ------------------------||.|-||------||-|||||-||||-|.|--||--
+query             0 CGGTAGCCAGCTGCGTTCAGTATGGAAG-AT------TT-GATTT-GTTT-AGC--GATC
+
+target           34 --CA-ACCTACCGTGACAAAGAAAGTTGTC-GATGCTTTGTGACTTG-CTGTC-CTCTAT
+                 60 --||-|-||||||||||-||||||||||||-|-|-||||||||||||-|||||-||||||
+query            48 GCCATA-CTACCGTGAC-AAGAAAGTTGTCAG-T-CTTTGTGACTTGCCTGTCGCTCTAT
+
+target           88 CTT-CAGACTCCTTGGTCCAT-TTCAAGACCAAACAATCAGTAGTAGCGACGGGCGGTGT
+                120 |||-|||||||||||||||.|-|||||-.||-------|.||||||||||||||||||||
+query           104 CTTCCAGACTCCTTGGTCCGTGTTCAA-TCC-------CGGTAGTAGCGACGGGCGGTGT
+
+target          146 -GGCAATATC-GCTTTCAAC-GAAACACAAAGA-AT-- 178
+                180 -.|.|.||||-||--.||||-|||--|||||||-|--- 218
+query           156 ATGTATTATCAGC--GCAACAGAA--ACAAAGACA-CC 189
+
+target            0 GATGCATACTTCGTTCGATTTCGTTTCAACTGGACAACCTACCGTGACAAAGAAAGTTGT
+                  0 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query             0 GATGCATACTTCGTTCGATTTCGTTTCAACTGGACAACCTACCGTGACAAAGAAAGTTGT
+
+target           60 CGATGCTTTGTGACTTGCTGTCCTCTATCTTCAGACTCCTTGGTCCATTTCAAGACCAAA
+                 60 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query            60 CGATGCTTTGTGACTTGCTGTCCTCTATCTTCAGACTCCTTGGTCCATTTCAAGACCAAA
+
+target          120 CAATCAGTAGTAGCGACGGGCGGTGTGGCAATATCGCTTTCAACGAAACACAAAGAAT
+                120 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query           120 CAATCAGTAGTAGCGACGGGCGGTGTGGCAATATCGCTTTCAACGAAACACAAAGAAT
+
+target          178
+                178
+query           178
+
+target            0 GTTTTGTCGCTGCGTTCAGTTTATGGGTGCGGGTGTTATGATGCTTCGCTTTACGTGACA
+                  0 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query             0 GTTTTGTCGCTGCGTTCAGTTTATGGGTGCGGGTGTTATGATGCTTCGCTTTACGTGACA
+
+target           60 AGAAAGTTAGTAGATTGTCTTTATGTTTCTGTGGTGCTGATATTGCCACACCGCCCGATA
+                 60 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query            60 AGAAAGTTAGTAGATTGTCTTTATGTTTCTGTGGTGCTGATATTGCCACACCGCCCGATA
+
+target          120 GCTCTACCGATTGAAACACGGACCAAGGAATCGGAAATGTAGGCGAGCAGGCCGTCCTGA
+                120 ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+query           120 GCTCTACCGATTGAAACACGGACCAAGGAATCGGAAATGTAGGCGAGCAGGCCGTCCTGA
+
+target          180 ACACCCATTAACTTTCTTGTC 201
+                180 ||||||||||||||||||||| 201
+query           180 ACACCCATTAACTTTCTTGTC 201
+
