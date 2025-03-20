@@ -31,33 +31,52 @@ def wrap(s, columns):
         yield ''.join(line)
 
 def collapse_subs(alignment, max_dist):
-    alignment_str = str(alignment)
-    if "target" in alignment_str:
-        # this needs relatively recent biopython
-        rows = str(alignment).split('\n')
-        targets = [row for row in rows if row.startswith("target")]
-        queries = [row for row in rows if row.startswith("query")]
+    raw1 = alignment.target
+    raw2 = alignment.query
 
-        def extract_seq(row):
-            pieces = row.split()
-            while pieces[-1].isdigit():
-                pieces.pop()
-            return pieces[-1]
+    # Create aligned sequences with gaps
+    aligned1 = []
+    aligned2 = []
 
-        seq1 = "".join(extract_seq(row) for row in targets)
-        seq2 = "".join(extract_seq(row) for row in queries)
-    else:
-        seq1, _, seq2, _ = alignment_str.split('\n')
+    pos1 = 0
+    pos2 = 0
+
+    # Generate aligned sequences with proper gap placement
+    for (start1, end1), (start2, end2) in zip(
+            alignment.aligned[0], alignment.aligned[1]):
+        # Add gaps before aligned segment if needed
+        if start1 > pos1:
+            aligned1.extend(raw1[pos1:start1])
+            aligned2.extend(['-'] * (start1 - pos1))
+            pos1 = start1
+        elif start2 > pos2:
+            aligned1.extend(['-'] * (start2 - pos2))
+            aligned2.extend(raw2[pos2:start2])
+            pos2 = start2
+
+        # Add the aligned segment
+        aligned1.extend(raw1[start1:end1])
+        aligned2.extend(raw2[start2:end2])
+
+        pos1 = end1
+        pos2 = end2
+
+    # Add any trailing sequence
+    if pos1 < len(raw1):
+        aligned1.extend(raw1[pos1:])
+        aligned2.extend(['-'] * (len(raw1) - pos1))
+    elif pos2 < len(raw2):
+        aligned1.extend(['-'] * (len(raw2) - pos2))
+        aligned2.extend(raw2[pos2:])
+
+    if len(aligned1) != len(aligned2):
+        raise Exception(
+            'sequences different length after alignment: %s vs %s' % (
+                len(aligned1), len(aligned2)))
 
     out1 = []
     out2 = []
-
-    if len(seq1) != len(seq2):
-        raise Exception(
-            'sequences different length after alignment: %s vs %s' % (
-                len(seq1), len(seq2)))
-
-    for c1, c2 in zip(seq1, seq2):
+    for c1, c2 in zip(aligned1, aligned2):
         for i in range(1, min(max_dist, len(out1), len(out2))):
             if c1 == '-' and out2 and out2[-i] == '-':
                 out2.pop(-i)
@@ -209,7 +228,7 @@ def align_and_print(rec1, rec2, args):
     if args.just_print_copyable_alignment:
         print(alignment)
         return
-    
+
     seq1_aligned, seq2_aligned = collapse_subs(alignment, args.max_dist)
 
     if args.moving_average_tsv:
@@ -239,7 +258,7 @@ def align_and_print(rec1, rec2, args):
         if (args.chart and
             not all(c == "-" for c in seq1_line) and
             not all(c == "-" for c in seq2_line)):
-            
+
             import matplotlib.pyplot as plt
             fig, ax = plt.subplots(figsize=(10, 2), constrained_layout=True)
 
