@@ -100,12 +100,13 @@ def interpret_sequence_argument(arg_in):
         with open(fname) as inf:
             records = SeqIO.parse(inf, guess_format_or_die(fname))
             if seq_id:
-                for record in records:
-                    if record.id == seq_id:
+                for idx, record in enumerate(records):
+                    if record.id == seq_id or \
+                       seq_id.isdigit() and int(seq_id) == idx:
                         return [maybe_rc(record)]
                 else:
                     die('Sequence %r not found in %r' % (
-                        seq_id, fnamer))
+                        seq_id, fname))
             else:
                 return [maybe_rc(record) for record in records]
     else:

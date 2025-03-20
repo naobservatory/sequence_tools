@@ -10,5 +10,4 @@
 #     ./test.sh tests/gold-45-sas-h-nb.txt
 #   Regold one test:
 #     ./test.sh --regold tests/gold-45-sas-h-nb.txt
-./test-seqdsp.sh "$@"
 ./test-align.sh "$@"

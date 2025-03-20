@@ -49,7 +49,7 @@ def collapse_subs(alignment, max_dist):
             aligned1.extend(raw1[pos1:start1])
             aligned2.extend(['-'] * (start1 - pos1))
             pos1 = start1
-        elif start2 > pos2:
+        if start2 > pos2:
             aligned1.extend(['-'] * (start2 - pos2))
             aligned2.extend(raw2[pos2:start2])
             pos2 = start2
@@ -65,10 +65,19 @@ def collapse_subs(alignment, max_dist):
     if pos1 < len(raw1):
         aligned1.extend(raw1[pos1:])
         aligned2.extend(['-'] * (len(raw1) - pos1))
-    elif pos2 < len(raw2):
+    if pos2 < len(raw2):
         aligned1.extend(['-'] * (len(raw2) - pos2))
         aligned2.extend(raw2[pos2:])
 
+    aligned1 = "".join(aligned1)
+    aligned2 = "".join(aligned2)
+
+    if aligned1.replace("-", "") != raw1:
+        raise Exception('dropped characters from %s to make %s' % (
+            raw1, aligned1))
+    if aligned2.replace("-", "") != raw2:
+        raise Exception('dropped characters from %s to make %s' % (
+            raw2, aligned2))
     if len(aligned1) != len(aligned2):
         raise Exception(
             'sequences different length after alignment: %s vs %s' % (
