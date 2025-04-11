@@ -11,3 +11,4 @@
 #   Regold one test:
 #     ./test.sh --regold tests/gold-45-sas-h-nb.txt
 ./test-align.sh "$@"
+./test-siz2fastq.sh "$@"

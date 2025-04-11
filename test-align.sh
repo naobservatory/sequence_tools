@@ -1,5 +1,5 @@
 #!/bin/bash
-INVOCATION="./align.py"
+INVOCATION="./align.py --columns=80"
 PREFIX="align"
 source test-util.sh
 

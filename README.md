@@ -37,3 +37,22 @@ options:
   --just-print-copyable-alignment
                         Ignore any other settings and just use the default
                         BioPython alignment pretty printing
+
+## siz2fastq
+
+```
+usage: cat foo.fastq.zstd | siz2fastq output_1.fastq.gz output_2.fastq.gz
+
+Convert zstd-compressed interleaved fastq to paired gzip-compressed fastq.
+
+Unlike full fastq, hard wrapping is not permitted: this simply takes the first
+four lines and puts them in output_1.fastq.gz, then the next four and puts them
+in output_2.fastq.gz, and then keeps alternating.
+
+Compatible with streaming. For example:
+
+```
+aws s3 cp s3://bucket/foo.fastq.zstd | \
+    siz2fastq >(aws s3 cp - s3://bucket/foo_1.fastq.gz) \
+              >(aws s3 cp - s3://bucket/foo_2.fastq.gz) \
+```

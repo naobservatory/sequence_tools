@@ -24,6 +24,12 @@ function fail() {
 }
 
 function check() {
+  local this_test="$1"
+  shift
+  check_pipeline "$this_test" "$INVOCATION $@"
+}
+
+function check_pipeline() {
   local error_code
   local this_test="$1"
   local gold="tests/${PREFIX}.${this_test}.gold"
@@ -35,7 +41,7 @@ function check() {
 
   echo "    check_gold $gold matches $@"
   local tmp="/tmp/icdiff.output"
-  $INVOCATION "$@" --columns=80 &> "$tmp"
+  bash -c "$*" &> "$tmp"
   error_code="$?"
 
   if $REGOLD; then
