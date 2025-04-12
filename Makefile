@@ -2,8 +2,8 @@ CC = gcc
 CFLAGS = -Wall -Wextra -O2
 LDFLAGS =
 LIBS = -lzstd -lz
-TARGET = siz2fastq
-SRC = siz2fastq.c
+TARGET = siz2rcraw
+SRC = siz2rcraw.c
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin) # macOS-specific settings
