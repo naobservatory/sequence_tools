@@ -2,8 +2,10 @@ CC = gcc
 CFLAGS = -Wall -Wextra -O3
 LDFLAGS =
 LIBS = -lzstd -lz
-TARGET = siz2fastq
-SRC = siz2fastq.c
+TARGET_SIZ2FASTQ = siz2fastq
+SRC_SIZ2FASTQ = siz2fastq.c
+TARGET_SIZER = SIZer
+SRC_SIZER = SIZer.c
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin) # macOS-specific settings
@@ -14,17 +16,20 @@ ifeq ($(UNAME_S),Darwin) # macOS-specific settings
     CFLAGS += -I$(BREW_PREFIX)/include
 endif
 
-all: $(TARGET)
+all: $(TARGET_SIZ2FASTQ) $(TARGET_SIZER)
 
-$(TARGET): $(SRC)
+$(TARGET_SIZ2FASTQ): $(SRC_SIZ2FASTQ)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+$(TARGET_SIZER): $(SRC_SIZER)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
 
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET_SIZ2FASTQ) $(TARGET_SIZER)
 
-install: $(TARGET)
+install: $(TARGET_SIZ2FASTQ)
 	install -d $(DESTDIR)/usr/local/bin/
-	install -m 755 $(TARGET) $(DESTDIR)/usr/local/bin/
+	install -m 755 $(TARGET_SIZ2FASTQ) $(DESTDIR)/usr/local/bin/
 
 uninstall:
 	rm -f $(DESTDIR)/usr/local/bin/$(TARGET)

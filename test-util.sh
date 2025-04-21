@@ -71,7 +71,7 @@ function check_pipeline() {
 
   echo "    check_gold $gold matches $@"
   local tmp="/tmp/sequence-tools.diff.output"
-  bash -c "$*" &> "$tmp"
+  bash -c "$*" > "$tmp"
   error_code="$?"
 
   if $REGOLD; then
