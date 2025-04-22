@@ -142,10 +142,14 @@ int main(int argc, char *argv[]) {
         input.pos = 0;
 
         // In most cases the call to ZSTD_decompressStream below will consume
-        // all of `input`, but if `input` represents multiple concatenated zstd
-        // files then it will stop partway through the input.  When it does
-        // that it sets input.pos to how far it got, and we'll just call again
-        // on the remainder because we don't care that it's concatenated.
+        // all of `input`, but not it:
+        //  1. `input` represents multiple concatenated zstd files, in which
+        //     case it will stop partway through the input.  When it does that
+        //     it sets input.pos to how far it got, and we'll just call again
+        //     on the remainder because we don't care that it's concatenated.
+        //  2. We can't fit all of the decompressed data in the output buffer,
+        //     in which case we'll consume what we have and loop to handle the
+        //     rest.
         while (input.pos < input.size) {
             ZSTD_outBuffer output = { out_buffer, BUFFER_SIZE, 0 };
 
