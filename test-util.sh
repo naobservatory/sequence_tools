@@ -70,7 +70,7 @@ function check_pipeline() {
   fi
 
   echo "    check_gold $gold matches $@"
-  local tmp="/tmp/icdiff.output"
+  local tmp="/tmp/sequence-tools.diff.output"
   bash -c "$*" &> "$tmp"
   error_code="$?"
 
