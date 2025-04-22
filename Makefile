@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -O3
 LDFLAGS =
-LIBS = -lzstd -lz
+LIBS_SIZ2FASTQ = -lzstd -lz
 TARGET_SIZ2FASTQ = siz2fastq
 SRC_SIZ2FASTQ = siz2fastq.c
 TARGET_SIZER = SIZer
@@ -19,10 +19,10 @@ endif
 all: $(TARGET_SIZ2FASTQ) $(TARGET_SIZER)
 
 $(TARGET_SIZ2FASTQ): $(SRC_SIZ2FASTQ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_SIZ2FASTQ)
 
 $(TARGET_SIZER): $(SRC_SIZER)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -f $(TARGET_SIZ2FASTQ) $(TARGET_SIZER)
