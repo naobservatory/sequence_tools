@@ -46,6 +46,9 @@ function fail() {
 # along with standard arguments) produces the expected output when run on the
 # arguments.
 function check() {
+  # The first argument is the test name, the rest are arguments for the
+  # commmand we're testing.  Pull off the test name and give the rest to
+  # check_pipeline.
   local this_test="$1"
   shift
   check_pipeline "$this_test" "$INVOCATION $@"
@@ -55,6 +58,8 @@ function check() {
 #
 # Verify that the pipeline we're testing (argument 2) produces the expected output.
 function check_pipeline() {
+  # The first argument is the test name, the second argument is a bash command
+  # to test.  If you're not testing a pipeline use `check` instead.
   local error_code
   local this_test="$1"
   local gold="tests/${PREFIX}.${this_test}.gold"
