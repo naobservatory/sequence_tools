@@ -103,19 +103,20 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Unprocessed bytes we've read from the input.
+    // Compressed bytes we've read from the input.
+    char in_buffer[BUFFER_SIZE];
+    // Decompressed bytes we've decoded from in_buffer but not added to
+    // line_buffer yet.
     char out_buffer[BUFFER_SIZE];
-    // Unprocessed bytes of the line we're currently reading.
+    // Decompressed bytes of the line we're currently reading.
     char line_buffer[BUFFER_SIZE];
-    // How far we are into the line we're currently reading.
+    // How far we are into line_buffer.
     size_t line_pos = 0;
 
     // As discussed above, optind is the index of the first positional
     // argument.
     OutputFile out1 = open_output_file(argv[optind], use_gzip);
     OutputFile out2 = open_output_file(argv[optind + 1], use_gzip);
-
-    char in_buffer[BUFFER_SIZE];
 
     ZSTD_DStream* dstream = ZSTD_createDStream();
     if (dstream == NULL) {
