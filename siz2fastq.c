@@ -32,6 +32,7 @@ OutputFile open_output_file(const char* filename, bool use_gzip) {
     return output;
 }
 
+// Write `size` bytes from `buffer` to `file`.
 size_t write_output(OutputFile* file, const void* buffer, size_t size) {
     if (file->is_gzipped) {
         return gzwrite(file->gz_file, buffer, size);
@@ -93,30 +94,46 @@ int main(int argc, char *argv[]) {
 
     ZSTD_inBuffer input = { in_buffer, 0, 0 };
 
+    // Unprocessed bytes we've read from the input.
     char out_buffer[BUFFER_SIZE];
+    // Unprocessed bytes of the line we're currently reading.
     char line_buffer[LINE_BUFFER_SIZE];
+    // How far we are into the line we're currently reading.
     size_t line_pos = 0;
 
-    OutputFile out_file1 = open_output_file(argv[optind], use_gzip);
-    OutputFile out_file2 = open_output_file(argv[optind + 1], use_gzip);
+    // As discussed above, optind is the index of the first positional
+    // argument.
+    OutputFile out1 = open_output_file(argv[optind], use_gzip);
+    OutputFile out2 = open_output_file(argv[optind + 1], use_gzip);
 
     // Verify files opened successfully.
-    if ((!out_file1.gz_file && !out_file1.regular_file) ||
-        (!out_file2.gz_file && !out_file2.regular_file)) {
+    if ((!out1.gz_file && !out1.regular_file) ||
+        (!out2.gz_file && !out2.regular_file)) {
         fprintf(stderr, "Error opening output files\n");
         ZSTD_freeDStream(dstream);
         return 1;
     }
 
+    // The number of lines we've read so far.
     long long line_count = 0;
-    OutputFile* current_file = &out_file1;
+    // We switch back and forth between writing to out1 and out2, four lines to
+    // one then four lines to the other.
+    OutputFile* current_file = &out1;
 
+    // Loop reading from stdin until there's no more input.  We read bytes not
+    // lines, so we do need to handle cases where a read gives us multiple
+    // lines or a partial line.
     size_t read_size;
     while ((read_size = fread(
               in_buffer, /*nitems=*/1, BUFFER_SIZE, stdin)) > 0) {
         input.size = read_size;
         input.pos = 0;
 
+        // In most cases the call to ZSTD_decompressStream below will consume
+        // all of `input`, but if `input` represents multiple concatenated zstd
+        // files then it will stop partway through the input.  When it does
+        // that it sets input.pos to how far it got, and we'll just call again
+        // on the remainder because we don't care that it's concatenated.
         while (input.pos < input.size) {
             ZSTD_outBuffer output = { out_buffer, BUFFER_SIZE, 0 };
 
@@ -125,28 +142,41 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr,
                         "Error during decompression: %s\n",
                         ZSTD_getErrorName(result));
-                close_output_file(&out_file1);
-                close_output_file(&out_file2);
+                close_output_file(&out1);
+                close_output_file(&out2);
                 ZSTD_freeDStream(dstream);
                 return 1;
             }
 
             for (size_t i = 0; i < output.pos; i++) {
+                // Save the input characters one at a time to line_buffer,
+                // building up the current line.
                 char c = out_buffer[i];
                 line_buffer[line_pos++] = c;
 
+                // When we learn the line has ended, process and reset the
+                // line buffer.
                 if (c == '\n') {
                     write_output(current_file, line_buffer, line_pos);
+                    // Reset the buffer, by telling ourselves it's empty.
                     line_pos = 0;
 
+                    // Every four lines (title, seq, plus line, quality) we
+                    // switch which file to write to, deinterleaving.
                     line_count++;
                     if (line_count % 8 < 4) {
-                        current_file = &out_file1;
+                        current_file = &out1;
                     } else {
-                        current_file = &out_file2;
+                        current_file = &out2;
                     }
                 }
 
+                // If we've built up a very long line in process, flush it out.
+                // Since we don't need to know how far we are into the line
+                // this isn't a problem (it would be if we were doing more
+                // involved processing that deinterleaving).  Note that this is
+                // very unlikely to happen, unless we have interleaved
+                // long-read data,
                 if (line_pos >= LINE_BUFFER_SIZE - 1) {
                   write_output(current_file, line_buffer, line_pos);
                     line_pos = 0;
@@ -160,8 +190,10 @@ int main(int argc, char *argv[]) {
         write_output(current_file, line_buffer, line_pos);
     }
 
-    close_output_file(&out_file1);
-    close_output_file(&out_file2);
+    // These would be closed automatically on exit, but it's tidier to clean
+    // them up.
+    close_output_file(&out1);
+    close_output_file(&out2);
     ZSTD_freeDStream(dstream);
 
     return 0;
