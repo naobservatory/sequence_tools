@@ -82,5 +82,5 @@ Arguments:
   zstd_threads         Number of zstd threads for script
 
 Example:
-  ./SIZer -p work/sampleA 1000000 r1.fq.gz r2.fq.gz s3://mybucket/siz/sampleA scripts/compress_upload.sh 16 3
+  ./SIZer -p work/sampleA 1000000 r1.fq.gz r2.fq.gz s3://mybucket/siz/sampleA ./compress_upload.sh 16 3
 ```
