@@ -9,6 +9,10 @@
 #define BUFFER_SIZE 4096
 #define LINE_BUFFER_SIZE 1024 * 1024
 
+// Split an interleaved zstd-compressed fastq file into a pair of optionally
+// gzip-compressed fastq files.  No input validation is performed: the input
+// must be valid fastq with no hard wrapping or you'll get garbage output.
+
 // Struct to track what kind of file we're writing, since we optionally
 // compress our output.
 typedef struct {
@@ -42,12 +46,18 @@ OutputFile open_output_file(const char* filename, bool use_gzip) {
     return output;
 }
 
-// Write `size` bytes from `buffer` to `file`.
-size_t write_output(OutputFile* file, const void* buffer, size_t size) {
+// Write `size` bytes from `buffer` to `file` or exit with an error message.
+void write_output_or_die(
+         OutputFile* file, const void* buffer, size_t size) {
+    size_t bytes_written;
     if (file->is_gzipped) {
-        return gzwrite(file->gz_file, buffer, size);
+        bytes_written = gzwrite(file->gz_file, buffer, size);
     } else {
-        return fwrite(buffer, /*nitems=*/1, size, file->regular_file);
+        bytes_written = fwrite(buffer, /*nitems=*/1, size, file->regular_file);
+    }
+    if (bytes_written != size) {
+        fprintf(stderr, "Failed to write all data\n");
+        exit(1);
     }
 }
 
@@ -94,16 +104,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char in_buffer[BUFFER_SIZE];
-
-    ZSTD_DStream* dstream = ZSTD_createDStream();
-    if (dstream == NULL) {
-        fprintf(stderr, "Error creating zstd decompression stream\n");
-        return 1;
-    }
-
-    ZSTD_inBuffer input = { in_buffer, 0, 0 };
-
     // Unprocessed bytes we've read from the input.
     char out_buffer[BUFFER_SIZE];
     // Unprocessed bytes of the line we're currently reading.
@@ -116,13 +116,15 @@ int main(int argc, char *argv[]) {
     OutputFile out1 = open_output_file(argv[optind], use_gzip);
     OutputFile out2 = open_output_file(argv[optind + 1], use_gzip);
 
-    // Verify files opened successfully.
-    if ((!out1.gz_file && !out1.regular_file) ||
-        (!out2.gz_file && !out2.regular_file)) {
-        fprintf(stderr, "Error opening output files\n");
-        ZSTD_freeDStream(dstream);
+    char in_buffer[BUFFER_SIZE];
+
+    ZSTD_DStream* dstream = ZSTD_createDStream();
+    if (dstream == NULL) {
+        fprintf(stderr, "Error creating zstd decompression stream\n");
         return 1;
     }
+
+    ZSTD_inBuffer input = { in_buffer, 0, 0 };
 
     // The number of lines we've read so far.
     long long line_count = 0;
@@ -167,7 +169,8 @@ int main(int argc, char *argv[]) {
                 // When we learn the line has ended, process and reset the
                 // line buffer.
                 if (c == '\n') {
-                    write_output(current_file, line_buffer, line_pos);
+                    write_output_or_die(current_file, line_buffer, line_pos);
+
                     // Reset the buffer, by telling ourselves it's empty.
                     line_pos = 0;
 
@@ -188,7 +191,7 @@ int main(int argc, char *argv[]) {
                 // very unlikely to happen, unless we have interleaved
                 // long-read data,
                 if (line_pos >= LINE_BUFFER_SIZE - 1) {
-                  write_output(current_file, line_buffer, line_pos);
+                    write_output_or_die(current_file, line_buffer, line_pos);
                     line_pos = 0;
                 }
             }
@@ -197,7 +200,7 @@ int main(int argc, char *argv[]) {
 
     // Maybe we have some left over, if the file doesn't end with newline.
     if (line_pos > 0) {
-        write_output(current_file, line_buffer, line_pos);
+        write_output_or_die(current_file, line_buffer, line_pos);
     }
 
     // These would be closed automatically on exit, but it's tidier to clean
