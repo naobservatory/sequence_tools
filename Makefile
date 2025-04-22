@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -O2
+CFLAGS = -Wall -Wextra -O3
 LDFLAGS =
 LIBS = -lzstd -lz
 TARGET = siz2fastq
