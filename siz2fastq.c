@@ -52,7 +52,13 @@ void write_output_or_die(
     if (file->is_gzipped) {
         bytes_written = gzwrite(file->gz_file, buffer, size);
     } else {
-        bytes_written = fwrite(buffer, /*nitems=*/1, size, file->regular_file);
+        bytes_written = fwrite(
+           buffer,
+           // treat as a buffer of individual bytes, so fwrite will return the
+           // number written.
+           1,
+           size,
+           file->regular_file);
     }
     if (bytes_written != size) {
         fprintf(stderr, "Failed to write all data\n");
@@ -137,12 +143,16 @@ int main(int argc, char *argv[]) {
     // lines or a partial line.
     size_t read_size;
     while ((read_size = fread(
-              in_buffer, /*nitems=*/1, BUFFER_SIZE, stdin)) > 0) {
+              in_buffer,
+              // Treat as a buffer of individual bytes, so fread will return
+              // the number read.
+              1,
+              BUFFER_SIZE, stdin)) > 0) {
         input.size = read_size;
         input.pos = 0;
 
         // In most cases the call to ZSTD_decompressStream below will consume
-        // all of `input`, but not it:
+        // all of `input`, but not if:
         //  1. `input` represents multiple concatenated zstd files, in which
         //     case it will stop partway through the input.  When it does that
         //     it sets input.pos to how far it got, and we'll just call again
