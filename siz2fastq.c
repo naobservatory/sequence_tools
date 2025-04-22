@@ -23,9 +23,19 @@ OutputFile open_output_file(const char* filename, bool use_gzip) {
 
     if (use_gzip) {
         output.gz_file = gzopen(filename, "wb");
+        if (output.gz_file == Z_NULL) {
+            fprintf(stderr,
+                    "Unable to open %s as a gzip-compressed output file\n",
+                    filename);
+            exit(1);
+        }
         output.regular_file = NULL;
     } else {
         output.regular_file = fopen(filename, "wb");
+        if (output.regular_file == NULL) {
+            fprintf(stderr, "Unable to open %s as output file\n", filename);
+            exit(1);
+        }
         output.gz_file = NULL;
     }
 
