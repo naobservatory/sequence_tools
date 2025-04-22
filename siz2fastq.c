@@ -7,7 +7,6 @@
 #include <unistd.h>
 
 #define BUFFER_SIZE 4096
-#define LINE_BUFFER_SIZE 1024 * 1024
 
 // Split an interleaved zstd-compressed fastq file into a pair of optionally
 // gzip-compressed fastq files.  No input validation is performed: the input
@@ -107,7 +106,7 @@ int main(int argc, char *argv[]) {
     // Unprocessed bytes we've read from the input.
     char out_buffer[BUFFER_SIZE];
     // Unprocessed bytes of the line we're currently reading.
-    char line_buffer[LINE_BUFFER_SIZE];
+    char line_buffer[BUFFER_SIZE];
     // How far we are into the line we're currently reading.
     size_t line_pos = 0;
 
@@ -194,7 +193,7 @@ int main(int argc, char *argv[]) {
                 // involved processing that deinterleaving).  Note that this is
                 // very unlikely to happen, unless we have interleaved
                 // long-read data,
-                if (line_pos >= LINE_BUFFER_SIZE - 1) {
+                if (line_pos >= BUFFER_SIZE - 1) {
                     write_output_or_die(current_file, line_buffer, line_pos);
                     line_pos = 0;
                 }
