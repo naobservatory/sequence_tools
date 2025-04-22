@@ -61,3 +61,26 @@ aws s3 cp s3://bucket/foo.fastq.zstd | \
     siz2fastq -z >(aws s3 cp - s3://bucket/foo_1.fastq.gz) \
                  >(aws s3 cp - s3://bucket/foo_2.fastq.gz) \
 ```
+
+## SIZer
+
+Convert paired short-read FASTQ files to split, interleaved, zstd-compressed (SIZ) format.
+Typically used within a data processing pipeline and with compress-upload.sh.
+
+Presently, input FASTQ files with hard wrapping are not supported.
+```
+Usage: ./SIZer [-p <local_prefix>] <reads_per_chunk> <r1_fastq> <r2_fastq> <s3_output_prefix> <compress_script_path> <max_concurrent_jobs> <zstd_threads>
+Options:
+  -p <local_prefix>  Prefix for temporary chunk files (default: work_chunk)
+Arguments:
+  reads_per_chunk      Max read pairs per output chunk
+  r1_fastq             Path to R1 FASTQ file (can be .gz)
+  r2_fastq             Path to R2 FASTQ file (can be .gz)
+  s3_output_prefix     S3 prefix for output files
+  compress_script_path Path to compression/upload script
+  max_concurrent_jobs  Max simultaneous background jobs
+  zstd_threads         Number of zstd threads for script
+
+Example:
+  ./SIZer -p work/sampleA 1000000 r1.fq.gz r2.fq.gz s3://mybucket/siz/sampleA scripts/compress_upload.sh 16 3
+```
