@@ -37,6 +37,7 @@ options:
   --just-print-copyable-alignment
                         Ignore any other settings and just use the default
                         BioPython alignment pretty printing
+```
 
 ## siz2fastq
 
@@ -51,7 +52,6 @@ in output_2.fastq.gz, and then keeps alternating.
 
 Compatible with streaming. For example:
 
-```
 aws s3 cp s3://bucket/foo.fastq.zstd | \
     siz2fastq >(aws s3 cp - s3://bucket/foo_1.fastq.gz) \
               >(aws s3 cp - s3://bucket/foo_2.fastq.gz) \
