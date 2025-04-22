@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# Test framework.
+#
+# Each test should look like either:
+#
+#    check ...
+#
+# Or:
+#
+#    check_pipeline ...
+#
+# In either case, the framework will verify that running the command produces
+# the expected "gold" output.  To update the gold outputs to match current
+# behavior, run with --regold.
+#
+# By default runs all the tests, or you can specify the name of a specific test
+# to run.
+
 if [ "$#" -gt 0 -a "$1" = "--regold" ]; then
   REGOLD="true"
   shift
@@ -23,7 +40,26 @@ function fail() {
   exit 1
 }
 
+# Usage: check test-name arg1 arg2 arg3
+#
+# Verify that the command we're testing (stored in global variable INVOCATION
+# along with standard arguments) produces the expected output when run on the
+# arguments.
 function check() {
+  # The first argument is the test name, the rest are arguments for the
+  # commmand we're testing.  Pull off the test name and give the rest to
+  # check_pipeline.
+  local this_test="$1"
+  shift
+  check_pipeline "$this_test" "$INVOCATION $@"
+}
+
+# Usage: check-pipeline test-name 'foo | bar | baz'
+#
+# Verify that the pipeline we're testing (argument 2) produces the expected output.
+function check_pipeline() {
+  # The first argument is the test name, the second argument is a bash command
+  # to test.  If you're not testing a pipeline use `check` instead.
   local error_code
   local this_test="$1"
   local gold="tests/${PREFIX}.${this_test}.gold"
@@ -34,8 +70,8 @@ function check() {
   fi
 
   echo "    check_gold $gold matches $@"
-  local tmp="/tmp/icdiff.output"
-  $INVOCATION "$@" --columns=80 &> "$tmp"
+  local tmp="/tmp/sequence-tools.diff.output"
+  bash -c "$*" &> "$tmp"
   error_code="$?"
 
   if $REGOLD; then
