@@ -17,7 +17,6 @@ typedef struct {
   size_t sizes[4];
 } FastqRecordBuffers;
 
-// Function Prototypes
 void print_usage_and_exit(const char *program_name);
 FILE *open_fastq_or_die(const char *path);
 void close_fastq_file(FILE *f, const char *path);
@@ -147,7 +146,7 @@ int main(int argc, char **argv) {
       if (fclose(out_chunk_fp) != 0) perror_and_exit("fclose chunk", chunk_filename);
       fprintf(stderr, "Debug: Closed chunk '%s' (%ld pairs)\n", chunk_filename,
               current_chunk_reads);
-      printf("%s\n", chunk_filename);  // Output chunk filename
+      printf("%s\n", chunk_filename);  // Output chunk filename to stdout, not stderr
       fflush(stdout);
       out_chunk_fp = NULL;
       chunk_index++;
@@ -188,12 +187,13 @@ void print_usage_and_exit(const char *program_name) {
           "Usage: %s -p <prefix> -n <max_files> [-c <reads>] <r1_fastq> <r2_fastq>\n",
           program_name);
   fprintf(stderr, "\nOptions:\n");
-  fprintf(stderr, "  -p <prefix>   (Required) Path prefix for output chunk files; ");
+  fprintf(stderr, "  -p <prefix>    (Required) Path prefix for output chunk files; ");
   fprintf(stderr, "a memory-backed location is recommended.\n");
-  fprintf(stderr, "     (e.g., /dev/shm/myfastq -> /dev/shm/myfastq_chunkNNNNNN.fastq)\n");
+  fprintf(stderr, "                 (e.g., /dev/shm/myfastq -> ");
+  fprintf(stderr, "/dev/shm/myfastq_chunkNNNNNN.fastq)\n");
   fprintf(stderr,
           "  -n <max_files> (Required) Max number of chunk files allowed concurrently.\n");
-  fprintf(stderr, "  -c <reads>    (Optional) Target read pairs per chunk (default: %d).\n",
+  fprintf(stderr, "  -c <reads>     (Optional) Target read pairs per chunk (default: %d).\n",
           DEFAULT_READ_PAIRS_PER_CHUNK);
   fprintf(stderr, "\nArguments:\n");
   fprintf(stderr, "  r1_fastq      Path to R1 FASTQ file.\n");
@@ -310,3 +310,4 @@ void wait_for_file_slot(const char *dir_path, const char *base_name, int max_fil
     usleep(50000);  // Wait 0.05 seconds
   }
 }
+

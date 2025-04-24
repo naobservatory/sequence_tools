@@ -39,3 +39,4 @@ uninstall:
 	rm -f $(addprefix $(DESTDIR)/usr/local/bin/,$(TARGETS))
 
 .PHONY: all clean install uninstall
+
