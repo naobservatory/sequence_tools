@@ -12,6 +12,12 @@
 #define MAX_FILENAME_LEN 4096
 #define DEFAULT_READ_PAIRS_PER_CHUNK 1000000
 
+#ifdef ENABLE_DEBUG
+  #define DEBUG(fmt, ...) fprintf(stderr, "Debug: " fmt "\n", ##__VA_ARGS__)
+#else
+  #define DEBUG(fmt, ...) ((void)0)
+#endif
+
 // Buffers for a 4-line FASTQ record
 typedef struct {
   char *lines[4];
@@ -102,8 +108,8 @@ int main(int argc, char **argv) {
   long total_read_pairs = 0;
   int exit_code = 0;
 
-  fprintf(stderr, "Starting: prefix='%s', max_files=%ld, reads/chunk=%ld\n", output_prefix,
-          max_files, read_pairs_per_chunk);
+  DEBUG("Starting: prefix='%s', max_files=%ld, reads/chunk=%ld\n", output_prefix,
+        max_files, read_pairs_per_chunk);
 
   // Main processing loop - read and interleave FASTQ records
   while (true) {
@@ -127,7 +133,7 @@ int main(int argc, char **argv) {
                base_name, chunk_suffix);
       out_chunk_fp = fopen(chunk_filename, "w");
       if (!out_chunk_fp) perror_and_exit("fopen output chunk", chunk_filename);
-      fprintf(stderr, "Debug: Opened chunk '%s'\n", chunk_filename);
+      DEBUG("Opened chunk '%s'\n", chunk_filename);
       current_chunk_reads = 0;
     }
 
@@ -147,8 +153,7 @@ int main(int argc, char **argv) {
     // Close chunk when full
     if (current_chunk_reads >= read_pairs_per_chunk) {
       if (fclose(out_chunk_fp) != 0) perror_and_exit("fclose chunk", chunk_filename);
-      fprintf(stderr, "Debug: Closed chunk '%s' (%ld pairs)\n", chunk_filename,
-              current_chunk_reads);
+      DEBUG("Closed chunk '%s' (%ld pairs)\n", chunk_filename, current_chunk_reads);
       printf("%s\n", chunk_suffix);  // Output chunk suffix to stdout, not stderr
       fflush(stdout);
       out_chunk_fp = NULL;
@@ -159,8 +164,7 @@ int main(int argc, char **argv) {
   // Handle final chunk
   if (exit_code == 0 && out_chunk_fp != NULL) {
     if (fclose(out_chunk_fp) != 0) perror_and_exit("fclose final chunk", chunk_filename);
-    fprintf(stderr, "Debug: Closed final chunk '%s' (%ld pairs)\n", chunk_filename,
-            current_chunk_reads);
+    DEBUG("Closed final chunk '%s' (%ld pairs)\n", chunk_filename, current_chunk_reads);
     printf("%s\n", chunk_suffix);
     fflush(stdout);
     out_chunk_fp = NULL;
@@ -173,15 +177,14 @@ int main(int argc, char **argv) {
   cleanup_buffers(&r1_buffers);
   cleanup_buffers(&r2_buffers);
   if (out_chunk_fp != NULL) {
-    fprintf(stderr, "Warning: Closing incomplete chunk '%s' due to error.\n",
-            chunk_filename);
+    DEBUG("Closing incomplete chunk '%s' due to error.\n", chunk_filename);
     fclose(out_chunk_fp);
   }
 
   free(prefix_copy_dir);
   free(prefix_copy_base);
 
-  fprintf(stderr, "Exiting with code %d.\n", exit_code);
+  DEBUG("Exiting with code %d.\n", exit_code);
   return exit_code;
 }
 
@@ -216,7 +219,7 @@ void perror_and_exit(const char *context, const char *details) {
 FILE *open_input_or_die(const char *path) {
   FILE *f = fopen(path, "r");
   if (!f) perror_and_exit("fopen input", path);
-  fprintf(stderr, "Debug: Opened input '%s'.\n", path);
+  DEBUG("Opened input '%s'.\n", path);
   return f;
 }
 
@@ -225,7 +228,7 @@ void close_file(FILE *f, const char *path) {
   if (fclose(f) != 0) {
     fprintf(stderr, "Warning: fclose failed for '%s': %s\n", path, strerror(errno));
   } else {
-    fprintf(stderr, "Debug: Closed '%s'.\n", path);
+    DEBUG("Closed '%s'.\n", path);
   }
 }
 
@@ -298,14 +301,14 @@ void wait_for_file_slot(const char *dir_path, const char *base_name, int max_fil
 
     if (current_files < max_files) {
       if (reported_waiting) {
-        fprintf(stderr, "Debug: Slot available (%d/%d files). Resuming.\n", current_files,
+        DEBUG("Slot available (%d/%d files). Resuming.\n", current_files,
                 max_files);
       }
       return;
     }
 
     if (!reported_waiting) {
-      fprintf(stderr, "Debug: Max files limit (%d/%d) reached. Waiting...\n", current_files,
+      DEBUG("Max files limit (%d/%d) reached. Waiting...\n", current_files,
               max_files);
       reported_waiting = true;
     }
