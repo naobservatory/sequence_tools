@@ -60,6 +60,10 @@ int main(int argc, char **argv) {
     switch (opt) {
       case 'd':
         output_dir = optarg;
+        if (!output_dir || !(*output_dir) || output_dir[strlen(output_dir) - 1] == '/') {
+          fprintf(stderr, "Error: Invalid -d value %s.\n", output_dir);
+          print_usage_and_exit(argv[0]);
+        }
         break;
       case 'n':
         errno = 0;
@@ -233,6 +237,7 @@ void print_usage_and_exit(const char *program_name) {
   fprintf(stderr, "\nOptions:\n");
   fprintf(stderr, "  -d <temp_dir>  (Required) Directory for output chunk files; ");
   fprintf(stderr, "a memory-backed location is recommended.\n");
+  fprintf(stderr, "                 Must not have a trailing slash.\n");
   fprintf(stderr,
           "  -n <max_files> (Required) Max number of chunk files allowed concurrently.\n");
   fprintf(stderr,
