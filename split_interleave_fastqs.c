@@ -19,8 +19,8 @@ typedef struct {
 } FastqRecordBuffers;
 
 void print_usage_and_exit(const char *program_name);
-FILE *open_fastq_or_die(const char *path);
-void close_fastq_file(FILE *f, const char *path);
+FILE *open_input_or_die(const char *path);
+void close_file(FILE *f, const char *path);
 int read_fastq_record(FILE *f, FastqRecordBuffers *buffers, int input_idx);
 void cleanup_buffers(FastqRecordBuffers *buffers);
 void perror_and_exit(const char *context, const char *details);
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
       case 'n':
         errno = 0;
         max_files = strtol(optarg, NULL, 10);
-        if (errno != 0 || max_files <= 0) {
+        if (max_files <= 0) {
           fprintf(stderr, "Error: Invalid -n value '%s'. Must be positive integer.\n",
                   optarg);
           print_usage_and_exit(argv[0]);
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
       case 'c':
         errno = 0;
         read_pairs_per_chunk = strtol(optarg, NULL, 10);
-        if (errno != 0 || read_pairs_per_chunk <= 0) {
+        if (read_pairs_per_chunk <= 0) {
           fprintf(stderr, "Error: Invalid -c value '%s'. Must be positive integer.\n",
                   optarg);
           print_usage_and_exit(argv[0]);
@@ -90,8 +90,8 @@ int main(int argc, char **argv) {
   char *base_name = basename(prefix_copy_base);
 
   // Initialize resources
-  FILE *f1 = open_fastq_or_die(r1_path);
-  FILE *f2 = open_fastq_or_die(r2_path);
+  FILE *f1 = open_input_or_die(r1_path);
+  FILE *f2 = open_input_or_die(r2_path);
   FILE *out_chunk_fp = NULL;
   FastqRecordBuffers r1_buffers = {{NULL}, {0}};
   FastqRecordBuffers r2_buffers = {{NULL}, {0}};
@@ -168,8 +168,8 @@ int main(int argc, char **argv) {
 
   // Cleanup
   fprintf(stderr, "Finished. Processed %ld total pairs.\n", total_read_pairs);
-  close_fastq_file(f1, r1_path);
-  close_fastq_file(f2, r2_path);
+  close_file(f1, r1_path);
+  close_file(f2, r2_path);
   cleanup_buffers(&r1_buffers);
   cleanup_buffers(&r2_buffers);
   if (out_chunk_fp != NULL) {
@@ -213,19 +213,19 @@ void perror_and_exit(const char *context, const char *details) {
   exit(1);
 }
 
-FILE *open_fastq_or_die(const char *path) {
+FILE *open_input_or_die(const char *path) {
   FILE *f = fopen(path, "r");
-  if (!f) perror_and_exit("fopen input fastq", path);
+  if (!f) perror_and_exit("fopen input", path);
   fprintf(stderr, "Debug: Opened input '%s'.\n", path);
   return f;
 }
 
-void close_fastq_file(FILE *f, const char *path) {
+void close_file(FILE *f, const char *path) {
   if (f == NULL) return;
   if (fclose(f) != 0) {
     fprintf(stderr, "Warning: fclose failed for '%s': %s\n", path, strerror(errno));
   } else {
-    fprintf(stderr, "Debug: Closed input '%s'.\n", path);
+    fprintf(stderr, "Debug: Closed '%s'.\n", path);
   }
 }
 
