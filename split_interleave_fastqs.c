@@ -45,6 +45,7 @@ void close_file(FILE *f, const char *path);
 void perror_and_exit(const char *context, const char *details);
 int count_chunk_files(const char *dir_path, const char *base_name);
 void wait_for_file_slot(const char *dir_path, const char *base_name, int max_files);
+void refill_buffer(InputState *input);
 int copy_record(InputState *input, OutputState *output, const char *out_path);
 
 int main(int argc, char **argv) {
@@ -126,6 +127,13 @@ int main(int argc, char **argv) {
   // Main processing loop - read and interleave FASTQ records
   while (true) {
     if (out_state.f == NULL) {
+      // we might be at EOF for both inputs, in which case we don't need to wait for a slot
+      refill_buffer(&r1_state);
+      refill_buffer(&r2_state);
+      if (r1_state.eof_flag && r2_state.eof_flag) {
+        DEBUG("Clean EOF detected on both inputs.\n");
+        break;  // normal loop exit
+      }
       // Wait for a slot and open new chunk file
       wait_for_file_slot(output_dir, output_prefix, max_files);
       snprintf(chunk_suffix, MAX_SUFFIX_LEN, "_chunk%06d.fastq", chunk_index);
@@ -320,6 +328,22 @@ void wait_for_file_slot(const char *dir_path, const char *base_name, int max_fil
   }
 }
 
+// Refill an InputState buffer and set eof_flag.
+// Safe to call (does nothing) if buffer is not exhausted.
+void refill_buffer(InputState *input) {
+  if (input->pos < input->valid) return;
+  // size of 1 since elements are single characters
+  input->valid = fread(input->buf, 1, input->buf_size, input->f);
+  input->pos = 0;
+  if (input->valid == 0) {
+    if (feof(input->f)) {
+      input->eof_flag = true;
+    } else {  // ferror occurred
+      perror_and_exit("fread error in copy_record", input->path);
+    }
+  }
+}
+
 // Copy 4 lines from input to output, flushing and refilling buffers as necessary.
 // Returns 1 on success, 0 for clean EOF (at the start of a 4-line record), -1 for
 // unexpected EOF.
@@ -338,20 +362,12 @@ int copy_record(InputState *input, OutputState *output, const char *out_path_for
   while (newline_count < 4) {
     // Refill input buffer if needed
     if (input->pos >= input->valid) {
-      // size of 1 since elements are single characters
-      input->valid = fread(input->buf, 1, input->buf_size, input->f);
-      input->pos = 0;
-
-      if (input->valid == 0) {
-        if (feof(input->f)) {
-          input->eof_flag = true;
-          if (newline_count == 0) return 0;  // clean EOF right at start of record
-          fprintf(stderr, "Error: Unexpected EOF in input '%s' after %d lines of record.\n",
-                  input->path, newline_count);
-          return -1;  // Unexpected EOF mid-record
-        } else {      // ferror occurred
-          perror_and_exit("fread error in copy_record", input->path);
-        }
+      refill_buffer(input);
+      if (input->eof_flag) {
+        if (newline_count == 0) return 0;  // clean EOF right at start of record
+        fprintf(stderr, "Error: Unexpected EOF in input '%s' after %d lines of record.\n",
+                input->path, newline_count);
+        return -1;  // Unexpected EOF mid-record
       }
     }
 
