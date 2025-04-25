@@ -11,6 +11,7 @@
 #define MAX_SUFFIX_LEN 24  // _chunkNNNNNN.fastq
 #define MAX_FILENAME_LEN 4096
 #define DEFAULT_READ_PAIRS_PER_CHUNK 1000000
+#define DEFAULT_TEMP_PREFIX "sample"
 
 #ifdef ENABLE_DEBUG
   #define DEBUG(fmt, ...) fprintf(stderr, "Debug: " fmt "\n", ##__VA_ARGS__)
@@ -34,16 +35,17 @@ int count_chunk_files(const char *dir_path, const char *base_name);
 void wait_for_file_slot(const char *dir_path, const char *base_name, int max_files);
 
 int main(int argc, char **argv) {
-  char *output_prefix = NULL;
+  char *output_dir = NULL;
+  char *output_prefix = DEFAULT_TEMP_PREFIX;
   long max_files = -1;
   long read_pairs_per_chunk = DEFAULT_READ_PAIRS_PER_CHUNK;
   int opt;
 
   // Parse command line arguments
-  while ((opt = getopt(argc, argv, "p:n:c:")) != -1) {
+  while ((opt = getopt(argc, argv, "d:n:c:p:")) != -1) {
     switch (opt) {
-      case 'p':
-        output_prefix = optarg;
+      case 'd':
+        output_dir = optarg;
         break;
       case 'n':
         errno = 0;
@@ -63,14 +65,17 @@ int main(int argc, char **argv) {
           print_usage_and_exit(argv[0]);
         }
         break;
+      case 'p':
+        output_prefix = optarg;
+        break;
       default:
         print_usage_and_exit(argv[0]);
     }
   }
 
   // Validate arguments
-  if (output_prefix == NULL || max_files == -1) {
-    fprintf(stderr, "Error: Missing required argument(s) -p or -n.\n");
+  if (output_dir == NULL || max_files == -1) {
+    fprintf(stderr, "Error: Missing required argument(s) -d or -n.\n");
     print_usage_and_exit(argv[0]);
   }
   if (optind != argc - 2) {
@@ -81,19 +86,6 @@ int main(int argc, char **argv) {
 
   char *r1_path = argv[optind];
   char *r2_path = argv[optind + 1];
-
-  // Extract directory and basename from output_prefix
-  // Need separate copies because dirname/basename can modify their inputs
-  char *prefix_copy_dir = strdup(output_prefix);
-  char *prefix_copy_base = strdup(output_prefix);
-  if (!prefix_copy_dir || !prefix_copy_base) {
-    free(prefix_copy_dir);
-    free(prefix_copy_base);
-    perror_and_exit("strdup prefix copy", output_prefix);
-  }
-
-  char *dir_path = dirname(prefix_copy_dir);
-  char *base_name = basename(prefix_copy_base);
 
   // Initialize resources
   FILE *f1 = open_input_or_die(r1_path);
@@ -127,10 +119,10 @@ int main(int argc, char **argv) {
 
     if (out_chunk_fp == NULL) {
       // Wait for a slot and open new chunk file
-      wait_for_file_slot(dir_path, base_name, max_files);
+      wait_for_file_slot(output_dir, output_prefix, max_files);
       snprintf(chunk_suffix, MAX_SUFFIX_LEN, "_chunk%06d.fastq", chunk_index);
-      snprintf(chunk_filename, MAX_FILENAME_LEN, "%s/%s%s", dir_path,
-               base_name, chunk_suffix);
+      snprintf(chunk_filename, MAX_FILENAME_LEN, "%s/%s%s", output_dir,
+               output_prefix, chunk_suffix);
       out_chunk_fp = fopen(chunk_filename, "w");
       if (!out_chunk_fp) perror_and_exit("fopen output chunk", chunk_filename);
       DEBUG("Opened chunk '%s'\n", chunk_filename);
@@ -181,26 +173,23 @@ int main(int argc, char **argv) {
     fclose(out_chunk_fp);
   }
 
-  free(prefix_copy_dir);
-  free(prefix_copy_base);
-
   DEBUG("Exiting with code %d.\n", exit_code);
   return exit_code;
 }
 
 void print_usage_and_exit(const char *program_name) {
   fprintf(stderr,
-          "Usage: %s -p <prefix> -n <max_files> [-c <reads>] <r1_fastq> <r2_fastq>\n",
+          "Usage: %s -d <temp_dir> -n <max_files> [-c <reads>] [-p <prefix>] <r1_fastq> <r2_fastq>\n",
           program_name);
   fprintf(stderr, "\nOptions:\n");
-  fprintf(stderr, "  -p <prefix>    (Required) Path prefix for output chunk files; ");
+  fprintf(stderr, "  -d <temp_dir>  (Required) Directory for output chunk files; ");
   fprintf(stderr, "a memory-backed location is recommended.\n");
-  fprintf(stderr, "                 (e.g., /dev/shm/myfastq -> ");
-  fprintf(stderr, "/dev/shm/myfastq_chunkNNNNNN.fastq)\n");
   fprintf(stderr,
           "  -n <max_files> (Required) Max number of chunk files allowed concurrently.\n");
   fprintf(stderr, "  -c <reads>     (Optional) Target read pairs per chunk (default: %d).\n",
           DEFAULT_READ_PAIRS_PER_CHUNK);
+  fprintf(stderr, "  -p <prefix>    (Optional) Prefix for temp files in <temp_dir> (default: %s)",
+          DEFAULT_TEMP_PREFIX);
   fprintf(stderr, "\nArguments:\n");
   fprintf(stderr, "  r1_fastq      Path to R1 FASTQ file.\n");
   fprintf(stderr, "  r2_fastq      Path to R2 FASTQ file.\n");
