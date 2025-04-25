@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#define MAX_SUFFIX_LEN 24  // _chunkNNNNNN.fastq
 #define MAX_FILENAME_LEN 4096
 #define DEFAULT_READ_PAIRS_PER_CHUNK 1000000
 
@@ -94,6 +95,7 @@ int main(int argc, char **argv) {
   FILE *out_chunk_fp = NULL;
   FastqRecordBuffers r1_buffers = {{NULL}, {0}};
   FastqRecordBuffers r2_buffers = {{NULL}, {0}};
+  char chunk_suffix[MAX_SUFFIX_LEN];
   char chunk_filename[MAX_FILENAME_LEN];
   int chunk_index = 0;
   long current_chunk_reads = 0;
@@ -120,8 +122,9 @@ int main(int argc, char **argv) {
     if (out_chunk_fp == NULL) {
       // Wait for a slot and open new chunk file
       wait_for_file_slot(dir_path, base_name, max_files);
-      snprintf(chunk_filename, MAX_FILENAME_LEN, "%s/%s_chunk%06d.fastq", dir_path,
-               base_name, chunk_index);
+      snprintf(chunk_suffix, MAX_SUFFIX_LEN, "_chunk%06d.fastq", chunk_index);
+      snprintf(chunk_filename, MAX_FILENAME_LEN, "%s/%s%s", dir_path,
+               base_name, chunk_suffix);
       out_chunk_fp = fopen(chunk_filename, "w");
       if (!out_chunk_fp) perror_and_exit("fopen output chunk", chunk_filename);
       fprintf(stderr, "Debug: Opened chunk '%s'\n", chunk_filename);
@@ -146,7 +149,7 @@ int main(int argc, char **argv) {
       if (fclose(out_chunk_fp) != 0) perror_and_exit("fclose chunk", chunk_filename);
       fprintf(stderr, "Debug: Closed chunk '%s' (%ld pairs)\n", chunk_filename,
               current_chunk_reads);
-      printf("%s\n", chunk_filename);  // Output chunk filename to stdout, not stderr
+      printf("%s\n", chunk_suffix);  // Output chunk suffix to stdout, not stderr
       fflush(stdout);
       out_chunk_fp = NULL;
       chunk_index++;
@@ -158,7 +161,7 @@ int main(int argc, char **argv) {
     if (fclose(out_chunk_fp) != 0) perror_and_exit("fclose final chunk", chunk_filename);
     fprintf(stderr, "Debug: Closed final chunk '%s' (%ld pairs)\n", chunk_filename,
             current_chunk_reads);
-    printf("%s\n", chunk_filename);
+    printf("%s\n", chunk_suffix);
     fflush(stdout);
     out_chunk_fp = NULL;
   }
