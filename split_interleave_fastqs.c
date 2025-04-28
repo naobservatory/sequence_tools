@@ -8,10 +8,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#define MAX_SUFFIX_LEN 24  // _chunkNNNNNN.fastq
+#define SUFFIX_FORMAT "_chunk%06d.fastq"
+// 20 bytes for a very large int formatted in %06d. In practice this should never happen
+// (typically we'll see max chunk index in the hundreds or low thousands, not above
+// a million), but we're otherwise technically at risk of a buffer overflow.
+#define MAX_SUFFIX_LEN (sizeof("_chunk") + 20 + sizeof(".fastq")) 
 #define MAX_FILENAME_LEN 4096
 #define DEFAULT_READ_PAIRS_PER_CHUNK 1000000
-#define DEFAULT_TEMP_PREFIX "sample"
 #define IO_BUF_SIZE 8192
 
 // State for one input stream (R1 or R2)
@@ -50,7 +53,7 @@ int copy_record(InputState *input, OutputState *output, const char *out_path);
 
 int main(int argc, char **argv) {
   char *output_dir = NULL;
-  char *output_prefix = DEFAULT_TEMP_PREFIX;
+  char *output_prefix = NULL;
   long max_files = -1;
   long read_pairs_per_chunk = DEFAULT_READ_PAIRS_PER_CHUNK;
   int opt;
@@ -92,8 +95,8 @@ int main(int argc, char **argv) {
   }
 
   // Validate arguments
-  if (output_dir == NULL || max_files == -1) {
-    fprintf(stderr, "Error: Missing required argument(s) -d or -n.\n");
+  if (output_dir == NULL || output_prefix == NULL || max_files == -1) {
+    fprintf(stderr, "Error: Missing required argument(s) -d or -p or -n.\n");
     print_usage_and_exit(argv[0]);
   }
   if (optind != argc - 2) {
@@ -140,7 +143,7 @@ int main(int argc, char **argv) {
       }
       // Wait for a slot and open new chunk file
       wait_for_file_slot(output_dir, output_prefix, max_files);
-      snprintf(chunk_suffix, MAX_SUFFIX_LEN, "_chunk%06d.fastq", chunk_index);
+      snprintf(chunk_suffix, MAX_SUFFIX_LEN, SUFFIX_FORMAT, chunk_index);
       snprintf(chunk_filename, MAX_FILENAME_LEN, "%s/%s%s", output_dir, output_prefix,
                chunk_suffix);
       out_state.f = fopen(chunk_filename, "w");
@@ -231,26 +234,25 @@ int main(int argc, char **argv) {
 
 void print_usage_and_exit(const char *program_name) {
   fprintf(stderr,
-          "Usage: %s -d <temp_dir> -n <max_files> [-c <reads>] [-p <prefix>] <r1_fastq> "
+          "Usage: %s -d <temp_dir> -p <prefix> -n <max_files> [-c <reads>] <r1_fastq> "
           "<r2_fastq>\n",
           program_name);
   fprintf(stderr, "\nOptions:\n");
   fprintf(stderr, "  -d <temp_dir>  (Required) Directory for output chunk files; ");
   fprintf(stderr, "a memory-backed location is recommended.\n");
   fprintf(stderr, "                 Must not have a trailing slash.\n");
+  fprintf(stderr, "  -p <prefix>    (Required) Prefix for temp files in <temp_dir>; ");
+  fprintf(stderr, "must be unique across concurrently executing processes.\n");
   fprintf(stderr,
           "  -n <max_files> (Required) Max number of chunk files allowed concurrently.\n");
   fprintf(stderr,
           "  -c <reads>     (Optional) Target read pairs per chunk (default: %d).\n",
           DEFAULT_READ_PAIRS_PER_CHUNK);
-  fprintf(stderr,
-          "  -p <prefix>    (Optional) Prefix for temp files in <temp_dir> (default: %s)",
-          DEFAULT_TEMP_PREFIX);
   fprintf(stderr, "\nArguments:\n");
   fprintf(stderr, "  r1_fastq      Path to R1 FASTQ file.\n");
   fprintf(stderr, "  r2_fastq      Path to R2 FASTQ file.\n");
   fprintf(stderr, "\nExample:\n");
-  fprintf(stderr, "  %s -d /tmp -n 16 -c 1000000 -p sampleA sA_R1.fq sA_R2.fq\n",
+  fprintf(stderr, "  %s -d /tmp -p sampleA -n 16 -c 1000000 sA_R1.fq sA_R2.fq\n",
           program_name);
   exit(1);
 }
