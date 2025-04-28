@@ -1,6 +1,6 @@
 #!/bin/bash
 # Wrapper script for processing FASTQ pairs to Split-Interleaved-Zstd (SIZ) files in S3
-# Usage: ./fastq_to_siz.sh [options] <r1_fastq> <r2_fastq> <s3_output_prefix>
+# Usage: ./fastq_to_siz.sh [options] <r1_fastq> <r2_fastq> <local_prefix> <s3_output_prefix>
 
 set -euo pipefail
 
