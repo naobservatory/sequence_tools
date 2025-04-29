@@ -20,14 +20,6 @@ echo "Compressing ${INPUT_CHUNK} to ${S3_OUTPUT_PATH} using ${ZSTD_THREADS} thre
 # Compress, stream to S3 via pipe
 zstd -"${ZSTD_LEVEL}" -T"${ZSTD_THREADS}" -c "${INPUT_CHUNK}" | aws s3 cp - "${S3_OUTPUT_PATH}"
 
-# With set -o pipefail enabled, $? will reflect failure of any command in the pipeline,
-# not just the aws command
-if [ $? -ne 0 ]; then
-  echo "ERROR: Compression or S3 upload failed for ${S3_OUTPUT_PATH}" >&2
-  # File is not removed on failure to allow for debugging
-  exit 1
-fi
-
 echo "Upload successful, removing ${INPUT_CHUNK}" >&2
 rm "${INPUT_CHUNK}"
 

@@ -13,9 +13,8 @@ READ_PAIRS_PER_CHUNK=1000000
 SPLIT_INTERLEAVE_BIN="./split_interleave_fastqs"
 COMPRESS_UPLOAD_BIN="./compress_upload.sh"
 
-# Function to display usage
-usage() {
-    echo "Usage: $0 [options] <r1_fastq> <r2_fastq> <s3_output_prefix>"
+print_usage_and_exit() {
+    echo "Usage: $0 [options] <r1_fastq> <r2_fastq> <prefix> <s3_output_prefix>"
     echo ""
     echo "Arguments:"
     echo "  <r1_fastq>          Forward read FASTQ file or stream"
@@ -85,7 +84,6 @@ done
 # Restore positional parameters
 set -- "${POSITIONAL_ARGS[@]}"
 
-# Check if we have exactly 3 positional arguments
 if [ $# -ne 4 ]; then
     echo "Error: Expected exactly 4 positional arguments."
     usage
@@ -96,12 +94,10 @@ R2_FASTQ="$2"
 PREFIX="$3"
 S3_OUTPUT_PREFIX="$4"
 
-# Check if binaries exist
 if [ ! -x "$SPLIT_INTERLEAVE_BIN" ]; then
     echo "Error: Split-interleave binary $SPLIT_INTERLEAVE_BIN does not exist or is not executable."
     exit 1
 fi
-
 if [ ! -x "$COMPRESS_UPLOAD_BIN" ]; then
     echo "Error: Compress-upload script $COMPRESS_UPLOAD_BIN does not exist or is not executable."
     exit 1
