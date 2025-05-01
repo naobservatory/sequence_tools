@@ -68,11 +68,11 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      usage
+      print_usage_and_exit
       ;;
     -*|--*)
       echo "Error: Unknown option $1"
-      usage
+      print_usage_and_exit
       ;;
     *)
       POSITIONAL_ARGS+=("$1")
@@ -86,7 +86,7 @@ set -- "${POSITIONAL_ARGS[@]}"
 
 if [ $# -ne 4 ]; then
     echo "Error: Expected exactly 4 positional arguments."
-    usage
+    print_usage_and_exit
 fi
 
 R1_FASTQ="$1"
