@@ -230,8 +230,10 @@ def align_and_print(rec1, rec2, args):
         raise
 
     if alignment.score / min(len(seq1), len(seq2)) < (args.min_score/100):
-        # print('no match: score=%s [%s, %s]' % (
-        #     alignment.score, len(seq1), len(seq2)))
+        if args.warn_on_unaligned:
+            print('no match: score=%s [%s, %s]' % (
+                alignment.score, seq1, seq2),
+                  file=sys.stderr)
         return
 
     if args.just_print_copyable_alignment:
@@ -349,6 +351,9 @@ def start():
     parser.add_argument(
         '--chart', action='store_true',
         help='visualize the alignment with some squiggles')
+    parser.add_argument(
+        '--warn-on-unaligned', action='store_true',
+        help='Print a warning if we fail to align')
     parser.add_argument(
         '--just-print-copyable-alignment', action='store_true',
         help='Ignore any other settings and just use the default BioPython '
